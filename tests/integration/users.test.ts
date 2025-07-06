@@ -2,8 +2,8 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   createTestClient,
   getCurrentUsername,
-  logSuccess,
   logCleanup,
+  logSuccess,
 } from "./shared/test-helpers.ts";
 import {
   TEST_RELEASE_ID,
@@ -88,7 +88,10 @@ Deno.test("Users and Collections Tests", async (t) => {
         method: "PUT",
         endpoint: "/users/:username/wants/:release_id",
         pathParams: { username, release_id: TEST_RELEASE_ID },
-        queryParams: { notes: TEST_WANTLIST_NOTE, rating: TEST_WANTLIST_RATING },
+        queryParams: {
+          notes: TEST_WANTLIST_NOTE,
+          rating: TEST_WANTLIST_RATING,
+        },
       });
 
       if (result.isErr()) {

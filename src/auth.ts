@@ -12,6 +12,8 @@ const signOAuthRequest = async (
   params: OAuthSignatureParams,
 ): Promise<Result<OAuthSignResult, OAuthError>> => {
   const { consumerKey, consumerSecret } = params.credentials;
+  const { token, tokenSecret } = params.credentials;
+
   if (!consumerKey || !consumerSecret) {
     return err({
       code: "INVALID_CREDENTIALS",
@@ -29,15 +31,17 @@ const signOAuthRequest = async (
       signature: oauth.HMAC_SHA1,
     });
 
-    const token = params.credentials.token && params.credentials.tokenSecret
+    const userToken = token && tokenSecret
       ? {
-        key: params.credentials.token,
-        secret: params.credentials.tokenSecret,
+        key: token,
+        secret: tokenSecret,
       }
       : undefined;
 
     const requestUrl = buildRequestUrl(params.url, params.parameters);
-    const signResult = await client.sign(params.method, requestUrl, { token });
+    const signResult = await client.sign(params.method, requestUrl, {
+      token: userToken,
+    });
 
     return ok(signResult);
   } catch (error) {
@@ -47,13 +51,6 @@ const signOAuthRequest = async (
       details: error,
     });
   }
-};
-
-export const generateOAuthSignature = async (
-  params: OAuthSignatureParams,
-): Promise<Result<string, OAuthError>> => {
-  const signResult = await signOAuthRequest(params);
-  return signResult.map((result) => result.oauth_signature);
 };
 
 export const createAuthorizationHeader = async (

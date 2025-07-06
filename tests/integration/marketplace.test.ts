@@ -1,6 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { createTestClient, logSuccess } from "./shared/test-helpers.ts";
-import { TEST_RELEASE_ID, TEST_CURRENCY } from "./shared/test-data.ts";
+import { TEST_CURRENCY, TEST_RELEASE_ID } from "./shared/test-data.ts";
 
 Deno.test("Marketplace Tests", async (t) => {
   const client = createTestClient();

@@ -7,22 +7,6 @@ export type OAuthCredentials = {
   tokenSecret?: string;
 };
 
-export type OAuthParameters = {
-  oauth_consumer_key: string;
-  oauth_nonce: string;
-  oauth_signature_method: string;
-  oauth_timestamp: string;
-  oauth_version: string;
-  oauth_token?: string;
-  oauth_signature?: string;
-};
-
-export type SignatureBaseStringParams = {
-  method: string;
-  url: string;
-  parameters: QueryParams;
-};
-
 export type OAuthSignatureParams = {
   credentials: OAuthCredentials;
   method: HttpMethod;

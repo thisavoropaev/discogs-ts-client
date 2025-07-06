@@ -32,7 +32,7 @@ export const createTestClient = (): DiscogsClient => {
 };
 
 export const getCurrentUsername = async (
-  client: DiscogsClient
+  client: DiscogsClient,
 ): Promise<string> => {
   const result = await client.request({
     method: "GET",
