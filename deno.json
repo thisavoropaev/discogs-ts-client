@@ -1,5 +1,5 @@
 {
-  "name": "@thisavoropaev/discogs-deno-client",
+  "name": "@thisavoropaev/discogs-ts-client",
   "version": "0.9.0",
   "description": "A modern TypeScript client for the Discogs API, optimized for edge and server runtimes (Deno, Node.js, Cloudflare, Vercel, etc).",
   "keywords": [
@@ -12,7 +12,7 @@
     "nodejs"
   ],
   "license": "MIT",
-  "repository": "https://github.com/thisavoropaev/discogs-deno-client",
+  "repository": "https://github.com/thisavoropaev/discogs-ts-client",
   "exports": {
     ".": "./src/mod.ts"
   },

@@ -1,11 +1,15 @@
 # A lightweight and modern TypeScript client for the Discogs API, built specifically for edge runtimes.
 
-Discogs uses OAuth 1.0a, which makes it unsuitable for direct client-side requests. This library is designed to run in edge environments like Edge Functions / Cloudflare Workers, acting as a secure proxy between the client and Discogs. It's lightweight, framework-agnostic, and also works seamlessly in Node.js.
+Discogs uses OAuth 1.0a, which makes it unsuitable for direct client-side
+requests. This library is designed to run in edge environments like Edge
+Functions / Cloudflare Workers, acting as a secure proxy between the client and
+Discogs. It's lightweight, framework-agnostic, and also works seamlessly in
+Node.js.
 
-[test-badge]: https://github.com/thisavoropaev/discogs-deno-client/actions/workflows/test.yml/badge.svg
-[test-url]: https://github.com/thisavoropaev/discogs-deno-client/actions/workflows/test.yml
-[jsr-badge]: https://jsr.io/badges/@thisavoropaev/discogs-deno-client
-[jsr-url]: https://jsr.io/@thisavoropaev/discogs-deno-client
+[test-badge]: https://github.com/thisavoropaev/discogs-ts-client/actions/workflows/test.yml/badge.svg
+[test-url]: https://github.com/thisavoropaev/discogs-ts-client/actions/workflows/test.yml
+[jsr-badge]: https://jsr.io/badges/@thisavoropaev/discogs-ts-client
+[jsr-url]: https://jsr.io/@thisavoropaev/discogs-ts-client
 
 [![JSR][jsr-badge]][jsr-url] [![CI][test-badge]][test-url]
 
@@ -37,7 +41,7 @@ Discogs uses OAuth 1.0a, which makes it unsuitable for direct client-side reques
 ### For Deno/Node
 
 ```typescript
-import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-deno-client";
+import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-ts-client";
 ```
 
 ## Usage Examples
@@ -45,7 +49,7 @@ import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-deno-client";
 ### Cloudflare Worker
 
 ```typescript
-import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-deno-client";
+import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-ts-client";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -118,8 +122,8 @@ console.log(`${release.title} (${release.year})`);
 
 ```bash
 # Clone the repository
-git clone git@github.com:thisavoropaev/discogs-deno-client.git
-cd discogs-deno-client
+git clone git@github.com:thisavoropaev/discogs-ts-client.git
+cd discogs-ts-client
 
 # Run tests
 deno task test
