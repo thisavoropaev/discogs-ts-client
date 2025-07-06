@@ -1,4 +1,4 @@
-# A lightweight and modern TypeScript client for the Discogs API, built specifically for edge runtimes.
+# A lightweight TypeScript client for the Discogs API, built specifically for edge runtimes.
 
 Discogs uses OAuth 1.0a, which makes it unsuitable for direct client-side
 requests. This library is designed to run in edge environments like Edge
