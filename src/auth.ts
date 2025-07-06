@@ -9,7 +9,7 @@ import type {
 import { buildRequestUrl } from "./url.ts";
 
 const signOAuthRequest = async (
-  params: OAuthSignatureParams,
+  params: OAuthSignatureParams
 ): Promise<Result<OAuthSignResult, OAuthError>> => {
   const { consumerKey, consumerSecret } = params.credentials;
   if (!consumerKey || !consumerSecret) {
@@ -29,12 +29,13 @@ const signOAuthRequest = async (
       signature: oauth.HMAC_SHA1,
     });
 
-    const token = params.credentials.token && params.credentials.tokenSecret
-      ? {
-        key: params.credentials.token,
-        secret: params.credentials.tokenSecret,
-      }
-      : undefined;
+    const token =
+      params.credentials.token && params.credentials.tokenSecret
+        ? {
+            key: params.credentials.token,
+            secret: params.credentials.tokenSecret,
+          }
+        : undefined;
 
     const requestUrl = buildRequestUrl(params.url, params.parameters);
     const signResult = await client.sign(params.method, requestUrl, { token });
@@ -49,15 +50,8 @@ const signOAuthRequest = async (
   }
 };
 
-export const generateOAuthSignature = async (
-  params: OAuthSignatureParams,
-): Promise<Result<string, OAuthError>> => {
-  const signResult = await signOAuthRequest(params);
-  return signResult.map((result) => result.oauth_signature);
-};
-
 export const createAuthorizationHeader = async (
-  params: OAuthSignatureParams,
+  params: OAuthSignatureParams
 ): Promise<Result<string, OAuthError>> => {
   const signResult = await signOAuthRequest(params);
   return signResult.map((result) => oauth.toAuthHeader(result));
