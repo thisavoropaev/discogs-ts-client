@@ -1,15 +1,13 @@
-# Discogs API Deno Client for Modern Runtimes
+# A lightweight and modern TypeScript client for the Discogs API, built specifically for edge runtimes.
 
-A modern TypeScript client for the Discogs API, optimized for edge runtime
-environments like Vercel Edge Functions and Cloudflare Workers, also suitable
-for Node.js as well.
+Discogs uses OAuth 1.0a, which makes it unsuitable for direct client-side requests. This library is designed to run in edge environments like Edge Functions / Cloudflare Workers, acting as a secure proxy between the client and Discogs. It's lightweight, framework-agnostic, and also works seamlessly in Node.js.
 
 [test-badge]: https://github.com/thisavoropaev/discogs-deno-client/actions/workflows/test.yml/badge.svg
 [test-url]: https://github.com/thisavoropaev/discogs-deno-client/actions/workflows/test.yml
 [jsr-badge]: https://jsr.io/badges/@thisavoropaev/discogs-deno-client
 [jsr-url]: https://jsr.io/@thisavoropaev/discogs-deno-client
 
-[![CI][test-badge]][test-url] [![JSR][jsr-badge]][jsr-url]
+[![JSR][jsr-badge]][jsr-url] [![CI][test-badge]][test-url]
 
 ## Features
 
