@@ -30,6 +30,12 @@
     "test": "deno test --allow-net --allow-env --allow-read",
     "test:unit": "deno test tests/unit/ --allow-net --allow-env",
     "test:integration": "deno test tests/integration/ --allow-net --allow-env --allow-read",
+    "test:integration:auth": "deno test tests/integration/auth.test.ts --allow-net --allow-env --allow-read",
+    "test:integration:releases": "deno test tests/integration/releases.test.ts --allow-net --allow-env --allow-read",
+    "test:integration:users": "deno test tests/integration/users.test.ts --allow-net --allow-env --allow-read",
+    "test:integration:database": "deno test tests/integration/database.test.ts --allow-net --allow-env --allow-read",
+    "test:integration:marketplace": "deno test tests/integration/marketplace.test.ts --allow-net --allow-env --allow-read",
+    "test:integration:artists-labels": "deno test tests/integration/artists-labels.test.ts --allow-net --allow-env --allow-read",
     "lint": "deno lint",
     "fmt": "deno fmt",
     "check": "deno check src/mod.ts"
