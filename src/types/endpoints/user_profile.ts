@@ -1,6 +1,7 @@
 export interface GetUserProfileResponse {
   id: number;
   username: string;
+  email?: string;
   name?: string;
   resource_url: string;
   uri: string;

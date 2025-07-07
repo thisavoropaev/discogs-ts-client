@@ -27,7 +27,7 @@ export const createTestClient = (): DiscogsClient => {
 
   return createDiscogsClient({
     credentials,
-    userAgent: "DiscogsClient/1.0 +https://github.com/test/discogs-deno-client",
+    userAgent: "DiscogsClient/1.0 +https://github.com/test/discogs-ts-client",
   });
 };
 
