@@ -1,16 +1,25 @@
 import type { Result } from "neverthrow";
-import type { OAuthCredentials } from "./auth.ts";
+import type { OAuthCredentials, ProxyCredentials } from "./auth.ts";
 import type {
   DiscogsApiError,
   EndpointResponseMap,
   RequestParams,
 } from "./mod.ts";
 
-export type DiscogsClientConfig = {
+// Direct mode configuration
+export type DirectClientConfig = {
   credentials: OAuthCredentials;
   userAgent: string;
-  baseUrl?: string;
 };
+
+// Proxy mode configuration
+export type ProxyClientConfig = {
+  credentials: ProxyCredentials;
+  proxyUrl: string;
+};
+
+// Union type for both modes
+export type DiscogsClientConfig = DirectClientConfig | ProxyClientConfig;
 
 export type DiscogsClientOptions = {
   timeout?: number;

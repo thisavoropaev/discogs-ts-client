@@ -7,6 +7,11 @@ export type OAuthCredentials = {
   tokenSecret?: string;
 };
 
+export type ProxyCredentials = {
+  token?: string;
+  tokenSecret?: string;
+};
+
 export type OAuthSignatureParams = {
   credentials: OAuthCredentials;
   method: HttpMethod;
