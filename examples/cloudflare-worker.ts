@@ -23,7 +23,7 @@ export default {
 
     // Handle proxy requests
     if (request.method === "POST") {
-      return await proxyHandler(request);
+      return await proxyHandler.handleRequest(request);
     }
 
     return new Response("Method not allowed", { status: 405 });
