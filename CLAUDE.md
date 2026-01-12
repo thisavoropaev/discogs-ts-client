@@ -1,10 +1,14 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/claude-code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/claude-code) when working
+with code in this repository.
 
 ## Project Overview
 
-This is a TypeScript client library for the Discogs API, published as `@thisavoropaev/discogs-ts-client` on JSR (JavaScript Registry). It's designed for edge runtime environments (Vercel Edge, Cloudflare Workers, Deno Deploy) with zero external runtime dependencies.
+This is a TypeScript client library for the Discogs API, published as
+`@thisavoropaev/discogs-ts-client` on JSR (JavaScript Registry). It's designed
+for edge runtime environments (Vercel Edge, Cloudflare Workers, Deno Deploy)
+with zero external runtime dependencies.
 
 ## Development Environment
 
@@ -46,10 +50,13 @@ deno fmt
 
 ### Key Patterns
 
-**Error Handling:** Uses `neverthrow` for Result-based error handling. All async operations return `Result<T, Error>` instead of throwing exceptions.
+**Error Handling:** Uses `neverthrow` for Result-based error handling. All async
+operations return `Result<T, Error>` instead of throwing exceptions.
 
 ```typescript
-const result = await client.get("/releases/{release_id}", { release_id: 249504 });
+const result = await client.get("/releases/{release_id}", {
+  release_id: 249504,
+});
 if (result.isOk()) {
   console.log(result.value);
 } else {
@@ -57,14 +64,18 @@ if (result.isOk()) {
 }
 ```
 
-**Type-Safe Endpoints:** Endpoints are mapped to their response types via `EndpointResponseMap`. The generic request method infers return types based on HTTP method + endpoint path.
+**Type-Safe Endpoints:** Endpoints are mapped to their response types via
+`EndpointResponseMap`. The generic request method infers return types based on
+HTTP method + endpoint path.
 
-**OAuth 1.0a:** Custom implementation using `@thisavoropaev/oauth-1a` for HMAC-SHA1 signature generation.
+**OAuth 1.0a:** Custom implementation using `@thisavoropaev/oauth-1a` for
+HMAC-SHA1 signature generation.
 
 ### Tests
 
 - **Unit tests:** `tests/unit/` - Test individual functions in isolation
-- **Integration tests:** `tests/integration/` - Test against live Discogs API (require OAuth credentials in `.env`)
+- **Integration tests:** `tests/integration/` - Test against live Discogs API
+  (require OAuth credentials in `.env`)
 
 ## Environment Variables
 
