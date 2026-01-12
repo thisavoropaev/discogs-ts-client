@@ -4,14 +4,19 @@ export const buildPath = (
   endpoint: string,
   pathParams: Record<string, string> | undefined,
 ): string => {
-  if (!pathParams) {
-    return endpoint;
-  }
-
   let path = endpoint;
 
-  for (const [key, value] of Object.entries(pathParams)) {
-    path = path.replace(`:${key}`, value);
+  if (pathParams) {
+    for (const [key, value] of Object.entries(pathParams)) {
+      path = path.replace(`:${key}`, value);
+    }
+  }
+
+  const missingParams = path.match(/:([a-zA-Z_]+)/g);
+  if (missingParams) {
+    throw new Error(
+      `Missing path parameters: ${missingParams.join(", ")}`,
+    );
   }
 
   return path;
