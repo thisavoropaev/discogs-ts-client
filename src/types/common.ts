@@ -29,6 +29,4 @@ export type PaginatedResponse<T> = {
   results: T[];
 };
 
-export type DiscogsResponse<T> = T;
-
 export type QueryParams = Record<string, string>;

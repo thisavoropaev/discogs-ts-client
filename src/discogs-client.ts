@@ -5,7 +5,6 @@ import type {
   DiscogsApiError,
   DiscogsClient,
   DiscogsClientConfig,
-  DiscogsClientOptions,
   EndpointResponseMap,
   RequestParams,
 } from "./types/mod.ts";
@@ -14,7 +13,6 @@ const DISCOGS_API_URL = "https://api.discogs.com";
 
 export const createDiscogsClient = (
   config: DiscogsClientConfig,
-  _options: DiscogsClientOptions = {},
 ): DiscogsClient => {
   if (!config.credentials.consumerKey || !config.credentials.consumerSecret) {
     throw new Error("Consumer key and secret are required");
