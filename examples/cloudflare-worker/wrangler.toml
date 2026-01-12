@@ -1,0 +1,12 @@
+name = "discogs-proxy"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+USER_AGENT = "DiscogsProxy/1.0"
+# ALLOWED_ORIGINS = "https://myapp.com,https://staging.myapp.com"
+
+# Set these secrets via wrangler:
+# wrangler secret put DISCOGS_CONSUMER_KEY
+# wrangler secret put DISCOGS_CONSUMER_SECRET

@@ -24,6 +24,7 @@
     "oauth-1a": "jsr:@thisavoropaev/oauth-1a@1.0.1",
     "dotenv": "jsr:@std/dotenv/load",
     "@std/assert": "jsr:@std/assert",
+    "@std/testing/mock": "jsr:@std/testing/mock",
     "@/": "./src/"
   },
   "tasks": {
