@@ -5,7 +5,6 @@ import type {
   DiscogsApiError,
   DiscogsClient,
   DiscogsClientConfig,
-  DiscogsClientOptions,
   EndpointResponseMap,
   RequestParams,
 } from "./types/mod.ts";
@@ -14,12 +13,7 @@ const DISCOGS_API_URL = "https://api.discogs.com";
 
 export const createDiscogsClient = (
   config: DiscogsClientConfig,
-  _options: DiscogsClientOptions = {},
 ): DiscogsClient => {
-  if (!config.credentials.consumerKey || !config.credentials.consumerSecret) {
-    throw new Error("Consumer key and secret are required");
-  }
-
   if (!config.userAgent) {
     throw new Error("User agent is required");
   }
@@ -82,23 +76,24 @@ export const createDiscogsClient = (
 async function handleApiResponse<T>(
   response: Response,
 ): Promise<Result<T, DiscogsApiError>> {
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    return err({
+      message: text || response.statusText,
+      statusCode: response.status,
+      type: getApiErrorType(response.status),
+    });
+  }
+
   try {
-    const text = await response.text();
-
-    if (!response.ok) {
-      return err({
-        message: text || response.statusText,
-        statusCode: response.status,
-        type: getApiErrorType(response.status),
-      });
-    }
-
-    const data = JSON.parse(text) as T;
+    const data = (await response.json()) as T;
     return ok(data);
   } catch (error) {
     return err({
-      message: error instanceof Error ? error.message : "Unknown error",
-      type: "NETWORK_ERROR",
+      message: error instanceof Error
+        ? error.message
+        : "Failed to parse response",
+      type: "PARSE_ERROR",
     });
   }
 }

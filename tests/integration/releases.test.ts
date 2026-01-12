@@ -11,11 +11,11 @@ Deno.test("Releases and Masters Tests", async (t) => {
   const client = createTestClient();
 
   await t.step(
-    "GET /releases/:release_id - should return release details",
+    "GET /releases/{release_id} - should return release details",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/releases/:release_id",
+        endpoint: "/releases/{release_id}",
         pathParams: { release_id: TEST_RELEASE_ID },
       });
 
@@ -44,7 +44,7 @@ Deno.test("Releases and Masters Tests", async (t) => {
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/releases/:release_id",
+        endpoint: "/releases/{release_id}",
         pathParams: { release_id: TEST_RELEASE_ID },
         queryParams: { curr_abbr: TEST_CURRENCY },
       });
@@ -67,7 +67,7 @@ Deno.test("Releases and Masters Tests", async (t) => {
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/releases/:release_id",
+        endpoint: "/releases/{release_id}",
         pathParams: { release_id: INVALID_RELEASE_ID },
       });
 
@@ -84,11 +84,11 @@ Deno.test("Releases and Masters Tests", async (t) => {
   );
 
   await t.step(
-    "GET /masters/:master_id/versions - should return master release versions",
+    "GET /masters/{master_id}/versions - should return master release versions",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/masters/:master_id/versions",
+        endpoint: "/masters/{master_id}/versions",
         pathParams: { master_id: TEST_MASTER_ID },
       });
 

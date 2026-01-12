@@ -29,9 +29,9 @@ Deno.test("OAuth - createAuthorizationHeader returns Result", async () => {
   }
 });
 
-Deno.test("OAuth - error handling", async () => {
+Deno.test("OAuth - error handling for invalid credentials", async () => {
   const credentials: OAuthCredentials = {
-    consumerKey: "", // Invalid credentials to trigger error
+    consumerKey: "",
     consumerSecret: "",
   };
 
@@ -41,6 +41,5 @@ Deno.test("OAuth - error handling", async () => {
     url: "https://api.example.com/test",
   });
 
-  // Should handle errors gracefully and return a Result.Err
   assertEquals(result.isErr(), true);
 });

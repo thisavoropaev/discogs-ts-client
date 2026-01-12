@@ -15,13 +15,13 @@ Deno.test("Users and Collections Tests", async (t) => {
   const client = createTestClient();
 
   await t.step(
-    "GET /users/:username - should return user profile",
+    "GET /users/{username} - should return user profile",
     async () => {
       const username = await getCurrentUsername(client);
 
       const result = await client.request({
         method: "GET",
-        endpoint: "/users/:username",
+        endpoint: "/users/{username}",
         pathParams: { username },
       });
 
@@ -44,13 +44,13 @@ Deno.test("Users and Collections Tests", async (t) => {
   );
 
   await t.step(
-    "GET /users/:username/collection/folders - should return collection folders",
+    "GET /users/{username}/collection/folders - should return collection folders",
     async () => {
       const username = await getCurrentUsername(client);
 
       const result = await client.request({
         method: "GET",
-        endpoint: "/users/:username/collection/folders",
+        endpoint: "/users/{username}/collection/folders",
         pathParams: { username },
       });
 
@@ -80,13 +80,13 @@ Deno.test("Users and Collections Tests", async (t) => {
   );
 
   await t.step(
-    "PUT /users/:username/wants/:release_id - should add release to wantlist",
+    "PUT /users/{username}/wants/{release_id} - should add release to wantlist",
     async () => {
       const username = await getCurrentUsername(client);
 
       const result = await client.request({
         method: "PUT",
-        endpoint: "/users/:username/wants/:release_id",
+        endpoint: "/users/{username}/wants/{release_id}",
         pathParams: { username, release_id: TEST_RELEASE_ID },
         queryParams: {
           notes: TEST_WANTLIST_NOTE,
@@ -108,13 +108,13 @@ Deno.test("Users and Collections Tests", async (t) => {
   );
 
   await t.step(
-    "DELETE /users/:username/wants/:release_id - should remove release from wantlist",
+    "DELETE /users/{username}/wants/{release_id} - should remove release from wantlist",
     async () => {
       const username = await getCurrentUsername(client);
 
       const result = await client.request({
         method: "DELETE",
-        endpoint: "/users/:username/wants/:release_id",
+        endpoint: "/users/{username}/wants/{release_id}",
         pathParams: { username, release_id: TEST_RELEASE_ID },
       });
 

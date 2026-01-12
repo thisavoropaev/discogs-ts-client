@@ -6,11 +6,11 @@ Deno.test("Artists and Labels Tests", async (t) => {
   const client = createTestClient();
 
   await t.step(
-    "GET /artists/:artist_id - should return artist details",
+    "GET /artists/{artist_id} - should return artist details",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/artists/:artist_id",
+        endpoint: "/artists/{artist_id}",
         pathParams: { artist_id: TEST_ARTIST_ID },
       });
 
@@ -33,11 +33,11 @@ Deno.test("Artists and Labels Tests", async (t) => {
   );
 
   await t.step(
-    "GET /labels/:label_id - should return label details",
+    "GET /labels/{label_id} - should return label details",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/labels/:label_id",
+        endpoint: "/labels/{label_id}",
         pathParams: { label_id: TEST_LABEL_ID },
       });
 

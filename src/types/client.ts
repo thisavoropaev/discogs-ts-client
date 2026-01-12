@@ -9,12 +9,6 @@ import type {
 export type DiscogsClientConfig = {
   credentials: OAuthCredentials;
   userAgent: string;
-  baseUrl?: string;
-};
-
-export type DiscogsClientOptions = {
-  timeout?: number;
-  retries?: number;
 };
 
 export type DiscogsClient = {
