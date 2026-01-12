@@ -29,4 +29,29 @@ Deno.test("Database Search Tests", async (t) => {
       );
     },
   );
+
+  await t.step(
+    "GET /database/search - pagination should work with page parameter",
+    async () => {
+      const result = await client.request({
+        method: "GET",
+        endpoint: "/database/search",
+        queryParams: { q: TEST_SEARCH_QUERY, type: TEST_SEARCH_TYPE, page: "2" },
+      });
+
+      if (result.isErr()) {
+        console.error("Search pagination error:", result.error);
+        throw new Error(`Search pagination failed: ${result.error.message}`);
+      }
+
+      const searchResults = result.value;
+      assertExists(searchResults.pagination);
+      assertEquals(searchResults.pagination.page, 2);
+      assertExists(searchResults.pagination.urls);
+
+      logSuccess(
+        `Pagination: Page ${searchResults.pagination.page} of ${searchResults.pagination.pages}`,
+      );
+    },
+  );
 });
