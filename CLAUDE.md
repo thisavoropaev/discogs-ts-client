@@ -93,3 +93,14 @@ DISCOGS_ACCESS_TOKEN_SECRET=your_token_secret
 1. Add response types in `src/types/endpoints/`
 2. Map endpoint to response type in `src/types/endpoint-response-map.ts`
 3. Add integration tests in `tests/integration/`
+
+## Git Workflow
+
+- **NEVER push to `main` automatically.** Pushes to `main` trigger automatic
+  releases to JSR, so they must always be done manually by the user.
+- Work in feature branches or `development` branch.
+- Merges to `main` are done manually by the user via PR or direct push.
+- Use conventional commits for automatic version bumping:
+  - `feat:` → minor version bump
+  - `fix:`, `perf:`, `refactor:` → patch version bump
+  - `BREAKING CHANGE:` or `feat!:` → major version bump
