@@ -104,11 +104,77 @@ jobs:
         run: |
           sed -i 's/"version": "[^"]*"/"version": "${{ steps.new_version.outputs.version }}"/' deno.json
 
+      - name: Generate CHANGELOG
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+
+          # Generate changelog entry for this release
+          ENTRY="## [$NEW_VERSION] - $DATE"$'\n\n'
+
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s" $LAST_TAG..HEAD)
+          fi
+
+          # Group commits by type
+          BREAKING=""
+          FEATURES=""
+          FIXES=""
+          OTHER=""
+
+          while IFS= read -r commit; do
+            if echo "$commit" | grep -qE "^BREAKING CHANGE:|^[a-z]+(\(.+\))?!:"; then
+              BREAKING="$BREAKING- $commit"$'\n'
+            elif echo "$commit" | grep -qE "^feat(\(.+\))?:"; then
+              BREAKING="$BREAKING"
+              msg=$(echo "$commit" | sed 's/^feat\(([^)]*)\)\?: //')
+              FEATURES="$FEATURES- $msg"$'\n'
+            elif echo "$commit" | grep -qE "^fix(\(.+\))?:"; then
+              msg=$(echo "$commit" | sed 's/^fix\(([^)]*)\)\?: //')
+              FIXES="$FIXES- $msg"$'\n'
+            elif echo "$commit" | grep -qE "^(chore|ci|docs|style|refactor|perf|test)(\(.+\))?:"; then
+              : # Skip chore, ci, docs, etc.
+            else
+              OTHER="$OTHER- $commit"$'\n'
+            fi
+          done <<< "$COMMITS"
+
+          if [ -n "$BREAKING" ]; then
+            ENTRY="$ENTRY### Breaking Changes"$'\n\n'"$BREAKING"$'\n'
+          fi
+          if [ -n "$FEATURES" ]; then
+            ENTRY="$ENTRY### Features"$'\n\n'"$FEATURES"$'\n'
+          fi
+          if [ -n "$FIXES" ]; then
+            ENTRY="$ENTRY### Bug Fixes"$'\n\n'"$FIXES"$'\n'
+          fi
+          if [ -n "$OTHER" ]; then
+            ENTRY="$ENTRY### Other"$'\n\n'"$OTHER"$'\n'
+          fi
+
+          # Prepend to CHANGELOG.md
+          if [ -f "CHANGELOG.md" ]; then
+            # Insert after the first line (header)
+            head -n 2 CHANGELOG.md > CHANGELOG.tmp
+            echo "" >> CHANGELOG.tmp
+            echo "$ENTRY" >> CHANGELOG.tmp
+            tail -n +3 CHANGELOG.md >> CHANGELOG.tmp
+            mv CHANGELOG.tmp CHANGELOG.md
+          else
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "$ENTRY" >> CHANGELOG.md
+          fi
+
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deno.json
+          git add deno.json CHANGELOG.md
           git commit -m "chore: release v${{ steps.new_version.outputs.version }}"
           git push
 
