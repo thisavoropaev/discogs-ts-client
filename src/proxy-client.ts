@@ -48,6 +48,17 @@ export const createProxyClient = (
         });
       }
 
+      if (!response.ok && response.status >= 500) {
+        const text = await response.text().catch(() => "");
+        return err({
+          message: `Proxy server error (${response.status}): ${
+            text.substring(0, 200) || response.statusText
+          }`,
+          type: "NETWORK_ERROR",
+          statusCode: response.status,
+        });
+      }
+
       let proxyResponse: ProxyResponse<
         EndpointResponseMap[TMethod][TEndpoint]
       >;
@@ -55,9 +66,12 @@ export const createProxyClient = (
         proxyResponse = (await response.json()) as ProxyResponse<
           EndpointResponseMap[TMethod][TEndpoint]
         >;
-      } catch {
+      } catch (error) {
+        const parseError = error instanceof Error
+          ? error.message
+          : "Unknown parse error";
         return err({
-          message: "Failed to parse proxy response",
+          message: `Failed to parse proxy response: ${parseError}`,
           type: "PARSE_ERROR",
         });
       }
@@ -76,15 +90,18 @@ export const createProxyClient = (
 };
 
 function mapErrorType(type: string): DiscogsApiError["type"] {
-  const validTypes = [
+  const validTypes: DiscogsApiError["type"][] = [
     "NETWORK_ERROR",
     "AUTH_ERROR",
     "API_ERROR",
     "VALIDATION_ERROR",
     "PARSE_ERROR",
   ];
-  if (validTypes.includes(type)) {
+  if (validTypes.includes(type as DiscogsApiError["type"])) {
     return type as DiscogsApiError["type"];
   }
+  console.warn(
+    `Unknown error type from proxy: "${type}", mapping to API_ERROR`,
+  );
   return "API_ERROR";
 }

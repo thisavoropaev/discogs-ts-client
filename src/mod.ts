@@ -17,7 +17,6 @@ export type {
   ProxyErrorPayload,
   ProxyRequestBody,
   ProxyResponse,
-  RateLimitInfo,
   UserCredentials,
 } from "./types/proxy.ts";
 export type * from "./types/endpoints/mod.ts";

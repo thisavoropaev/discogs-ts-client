@@ -19,6 +19,10 @@ export const createDiscogsClient = (
     return createProxyClient(config);
   }
 
+  if (!config.credentials?.consumerKey || !config.credentials?.consumerSecret) {
+    throw new Error("Consumer key and secret are required");
+  }
+
   if (!config.userAgent) {
     throw new Error("User agent is required");
   }

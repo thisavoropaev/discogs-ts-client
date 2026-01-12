@@ -38,11 +38,43 @@ export const createProxyHandler = (
     let body: ProxyRequestBody;
     try {
       body = (await request.json()) as ProxyRequestBody;
-    } catch {
+    } catch (error) {
+      const parseError = error instanceof Error
+        ? error.message
+        : "Unknown error";
       return jsonResponse(
         {
           success: false,
-          error: { type: "VALIDATION_ERROR", message: "Invalid JSON body" },
+          error: {
+            type: "VALIDATION_ERROR",
+            message: `Invalid JSON body: ${parseError}`,
+          },
+        },
+        corsHeaders,
+      );
+    }
+
+    const validMethods = ["GET", "POST", "PUT", "DELETE"];
+    if (!validMethods.includes(body.method)) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            type: "VALIDATION_ERROR",
+            message: `Invalid HTTP method: "${body.method}". Allowed: ${
+              validMethods.join(", ")
+            }`,
+          },
+        },
+        corsHeaders,
+      );
+    }
+
+    if (!body.endpoint || typeof body.endpoint !== "string") {
+      return jsonResponse(
+        {
+          success: false,
+          error: { type: "VALIDATION_ERROR", message: "Endpoint is required" },
         },
         corsHeaders,
       );
@@ -68,28 +100,39 @@ export const createProxyHandler = (
       userAgent: config.userAgent,
     });
 
-    const result = await client.request({
-      method: body.method as "GET" | "POST" | "PUT" | "DELETE",
-      endpoint: body.endpoint,
-      pathParams: toStringRecord(body.pathParams),
-      queryParams: toStringRecord(body.queryParams),
-    });
+    try {
+      const result = await client.request({
+        method: body.method as "GET" | "POST" | "PUT" | "DELETE",
+        endpoint: body.endpoint,
+        pathParams: toStringRecord(body.pathParams),
+        queryParams: toStringRecord(body.queryParams),
+      });
 
-    if (result.isOk()) {
-      return jsonResponse({ success: true, data: result.value }, corsHeaders);
-    }
+      if (result.isOk()) {
+        return jsonResponse({ success: true, data: result.value }, corsHeaders);
+      }
 
-    return jsonResponse(
-      {
-        success: false,
-        error: {
-          type: result.error.type,
-          message: result.error.message,
-          statusCode: result.error.statusCode,
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            type: result.error.type,
+            message: result.error.message,
+            statusCode: result.error.statusCode,
+          },
         },
-      },
-      corsHeaders,
-    );
+        corsHeaders,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Internal error";
+      return jsonResponse(
+        {
+          success: false,
+          error: { type: "VALIDATION_ERROR", message },
+        },
+        corsHeaders,
+      );
+    }
   };
 };
 
@@ -117,8 +160,25 @@ function getCorsHeaders(
 function jsonResponse(
   data: ProxyResponse,
   headers: Record<string, string>,
+  status?: number,
 ): Response {
+  let responseStatus = status ?? 200;
+
+  if (!data.success && !status) {
+    switch (data.error.type) {
+      case "AUTH_ERROR":
+        responseStatus = 401;
+        break;
+      case "VALIDATION_ERROR":
+        responseStatus = 400;
+        break;
+      default:
+        responseStatus = data.error.statusCode ?? 500;
+    }
+  }
+
   return new Response(JSON.stringify(data), {
+    status: responseStatus,
     headers: {
       "Content-Type": "application/json",
       ...headers,

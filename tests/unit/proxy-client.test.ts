@@ -2,6 +2,7 @@ import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
 import { stub } from "@std/testing/mock";
 import { createDiscogsClient } from "@/discogs-client.ts";
 import type {
+  DiscogsApiErrorType,
   ProxyModeConfig,
   ProxyRequestBody,
   ProxyResponse,
@@ -26,7 +27,7 @@ const createSuccessResponse = <T>(data: T): ProxyResponse<T> => ({
 });
 
 const createErrorResponse = (
-  type: string,
+  type: DiscogsApiErrorType,
   message: string,
   statusCode?: number,
 ): ProxyResponse => ({
@@ -210,6 +211,74 @@ Deno.test("ProxyClient - returns error from proxy response", async () => {
       assertEquals(result.error.type, "AUTH_ERROR");
       assertEquals(result.error.message, "Invalid token");
       assertEquals(result.error.statusCode, 401);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - maps unknown error type to API_ERROR", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: false,
+            error: { type: "UNKNOWN_ERROR", message: "Something weird" },
+          }),
+        ),
+      )
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "API_ERROR");
+      assertEquals(result.error.message, "Something weird");
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - handles proxy server 5xx error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(
+        new Response("Internal Server Error", { status: 502 }),
+      )
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "NETWORK_ERROR");
+      assertEquals(result.error.statusCode, 502);
+      assertStringIncludes(result.error.message, "Proxy server error");
     }
   } finally {
     fetchStub.restore();
