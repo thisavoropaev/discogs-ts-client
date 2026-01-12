@@ -4,7 +4,8 @@ export type DiscogsApiErrorType =
   | "NETWORK_ERROR"
   | "AUTH_ERROR"
   | "API_ERROR"
-  | "VALIDATION_ERROR";
+  | "VALIDATION_ERROR"
+  | "PARSE_ERROR";
 
 export type DiscogsApiError = {
   type: DiscogsApiErrorType;
