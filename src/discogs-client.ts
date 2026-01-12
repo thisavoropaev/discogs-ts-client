@@ -90,7 +90,9 @@ async function handleApiResponse<T>(
     return ok(data);
   } catch (error) {
     return err({
-      message: error instanceof Error ? error.message : "Failed to parse response",
+      message: error instanceof Error
+        ? error.message
+        : "Failed to parse response",
       type: "PARSE_ERROR",
     });
   }

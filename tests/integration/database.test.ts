@@ -36,7 +36,11 @@ Deno.test("Database Search Tests", async (t) => {
       const result = await client.request({
         method: "GET",
         endpoint: "/database/search",
-        queryParams: { q: TEST_SEARCH_QUERY, type: TEST_SEARCH_TYPE, page: "2" },
+        queryParams: {
+          q: TEST_SEARCH_QUERY,
+          type: TEST_SEARCH_TYPE,
+          page: "2",
+        },
       });
 
       if (result.isErr()) {

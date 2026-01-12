@@ -29,7 +29,8 @@ Deno.test("buildPath - throws error for missing path parameters", () => {
 
 Deno.test("buildPath - throws error for partially missing path parameters", () => {
   assertThrows(
-    () => buildPath("/users/{username}/wants/{release_id}", { username: "test" }),
+    () =>
+      buildPath("/users/{username}/wants/{release_id}", { username: "test" }),
     Error,
     "Missing path parameters: {release_id}",
   );
