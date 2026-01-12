@@ -16,6 +16,8 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: 2.x
+      - name: Wait for rate limit reset
+        run: sleep 65
       - run: deno task test
         env:
           DISCOGS_CONSUMER_KEY: ${{ secrets.DISCOGS_CONSUMER_KEY }}
