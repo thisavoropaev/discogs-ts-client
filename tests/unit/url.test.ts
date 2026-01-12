@@ -2,12 +2,12 @@ import { assertEquals, assertThrows } from "@std/assert";
 import { buildPath, buildRequestUrl } from "@/url.ts";
 
 Deno.test("buildPath - replaces path parameters", () => {
-  const result = buildPath("/releases/:release_id", { release_id: "249504" });
+  const result = buildPath("/releases/{release_id}", { release_id: "249504" });
   assertEquals(result, "/releases/249504");
 });
 
 Deno.test("buildPath - replaces multiple path parameters", () => {
-  const result = buildPath("/users/:username/wants/:release_id", {
+  const result = buildPath("/users/{username}/wants/{release_id}", {
     username: "testuser",
     release_id: "249504",
   });
@@ -21,17 +21,17 @@ Deno.test("buildPath - returns endpoint unchanged when no params needed", () => 
 
 Deno.test("buildPath - throws error for missing path parameters", () => {
   assertThrows(
-    () => buildPath("/releases/:release_id", undefined),
+    () => buildPath("/releases/{release_id}", undefined),
     Error,
-    "Missing path parameters: :release_id",
+    "Missing path parameters: {release_id}",
   );
 });
 
 Deno.test("buildPath - throws error for partially missing path parameters", () => {
   assertThrows(
-    () => buildPath("/users/:username/wants/:release_id", { username: "test" }),
+    () => buildPath("/users/{username}/wants/{release_id}", { username: "test" }),
     Error,
-    "Missing path parameters: :release_id",
+    "Missing path parameters: {release_id}",
   );
 });
 

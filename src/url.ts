@@ -8,11 +8,11 @@ export const buildPath = (
 
   if (pathParams) {
     for (const [key, value] of Object.entries(pathParams)) {
-      path = path.replace(`:${key}`, value);
+      path = path.replace(`{${key}}`, value);
     }
   }
 
-  const missingParams = path.match(/:([a-zA-Z_]+)/g);
+  const missingParams = path.match(/\{([a-zA-Z_]+)\}/g);
   if (missingParams) {
     throw new Error(
       `Missing path parameters: ${missingParams.join(", ")}`,

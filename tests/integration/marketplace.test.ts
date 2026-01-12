@@ -6,11 +6,11 @@ Deno.test("Marketplace Tests", async (t) => {
   const client = createTestClient();
 
   await t.step(
-    "GET /marketplace/stats/:release_id - should handle untyped endpoints",
+    "GET /marketplace/stats/{release_id} - should handle untyped endpoints",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/marketplace/stats/:release_id",
+        endpoint: "/marketplace/stats/{release_id}",
         pathParams: { release_id: TEST_RELEASE_ID },
       });
 
@@ -53,11 +53,11 @@ Deno.test("Marketplace Tests", async (t) => {
   );
 
   await t.step(
-    "GET /marketplace/stats/:release_id - should return release statistics with currency",
+    "GET /marketplace/stats/{release_id} - should return release statistics with currency",
     async () => {
       const result = await client.request({
         method: "GET",
-        endpoint: "/marketplace/stats/:release_id",
+        endpoint: "/marketplace/stats/{release_id}",
         pathParams: { release_id: TEST_RELEASE_ID },
         queryParams: { curr_abbr: TEST_CURRENCY },
       });
