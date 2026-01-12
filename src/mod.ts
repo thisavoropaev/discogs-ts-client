@@ -1,5 +1,10 @@
 export { createDiscogsClient } from "./discogs-client.ts";
 export { createAuthorizationHeader } from "./auth.ts";
+export {
+  createProxyHandler,
+  type ProxyHandler,
+  type ProxyHandlerConfig,
+} from "./proxy-handler.ts";
 
 export type {
   DirectModeConfig,
