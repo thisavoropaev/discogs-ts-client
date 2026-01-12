@@ -96,7 +96,7 @@ library for error handling:
 // Making a request with query parameters
 const result = await client.request({
   method: "GET",
-  endpoint: "/releases/:release_id",
+  endpoint: "/releases/{release_id}",
   pathParams: { release_id: "249504" },
   queryParams: { curr_abbr: "USD" },
 });
@@ -110,6 +110,30 @@ if (result.isErr()) {
 // Safely access the successful result
 const release = result.value;
 console.log(`${release.title} (${release.year})`);
+```
+
+### Error Types
+
+The client returns structured errors with the following types:
+
+- `AUTH_ERROR` - Authentication failed (401)
+- `VALIDATION_ERROR` - Invalid request parameters (400, 422)
+- `API_ERROR` - Server-side errors (5xx) or other client errors
+- `NETWORK_ERROR` - Network connectivity issues
+- `PARSE_ERROR` - Failed to parse API response as JSON
+
+```typescript
+if (result.isErr()) {
+  switch (result.error.type) {
+    case "AUTH_ERROR":
+      // Handle authentication issues
+      break;
+    case "PARSE_ERROR":
+      // Handle malformed response
+      break;
+      // ...
+  }
+}
 ```
 
 ## Development
@@ -207,12 +231,15 @@ type DiscogsClientConfig = {
 ```typescript
 client.request({
   method: "GET" | "POST" | "PUT" | "DELETE", // HTTP method
-  endpoint: string, // API endpoint path with placeholders
+  endpoint: string, // API endpoint path with {param} placeholders
   pathParams: Record<string, string | number>, // Path parameters
   queryParams: Record<string, string>, // Query parameters
   headers: Record<string, string>, // Additional headers
 });
 ```
+
+Path parameters use curly brace syntax: `/releases/{release_id}`. An error will
+be thrown if any path parameters are missing.
 
 ## Environment Variables
 
