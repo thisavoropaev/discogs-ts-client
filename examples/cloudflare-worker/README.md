@@ -48,7 +48,6 @@ const client = createDiscogsClient({
   mode: "proxy",
   proxy: {
     url: "https://your-worker.workers.dev",
-    autoRetryOnRateLimit: true,
   },
   userCredentials: {
     token: "user-oauth-token",
@@ -89,8 +88,7 @@ if (result.isOk()) {
 ```json
 {
   "success": true,
-  "data": {/* Discogs API response */},
-  "rateLimit": { "limit": 60, "remaining": 58, "used": 2 }
+  "data": {/* Discogs API response */}
 }
 ```
 
@@ -109,11 +107,25 @@ if (result.isOk()) {
 
 ## Local development
 
+### 1. Create `.dev.vars` file
+
+Create a `.dev.vars` file in this directory with your Discogs credentials:
+
+```
+DISCOGS_CONSUMER_KEY=your_consumer_key
+DISCOGS_CONSUMER_SECRET=your_consumer_secret
+```
+
+This file is automatically ignored by git and loaded by wrangler during local
+development.
+
+### 2. Start the dev server
+
 ```bash
 wrangler dev
 ```
 
-Then test with:
+### 3. Test with curl
 
 ```bash
 curl -X POST http://localhost:8787 \
