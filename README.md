@@ -44,47 +44,63 @@ Node.js.
 import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-ts-client";
 ```
 
-## Usage Examples
+## Client Modes
 
-### Cloudflare Worker
+The library supports two modes:
+
+### Direct Mode (Server-side)
+
+Use when you have full OAuth credentials on the server:
 
 ```typescript
 import { createDiscogsClient } from "jsr:@thisavoropaev/discogs-ts-client";
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const client = createDiscogsClient({
-      credentials: {
-        consumerKey: env.DISCOGS_CONSUMER_KEY,
-        consumerSecret: env.DISCOGS_CONSUMER_SECRET,
-        token: env.DISCOGS_ACCESS_TOKEN,
-        tokenSecret: env.DISCOGS_ACCESS_TOKEN_SECRET,
-      },
-      userAgent: "MyApp/1.0 +https://github.com/your-username/your-app",
-    });
-
-    const url = new URL(request.url);
-    const query = url.searchParams.get("q");
-
-    if (!query) {
-      return new Response("Missing query parameter", { status: 400 });
-    }
-
-    const result = await client.request({
-      method: "GET",
-      endpoint: "/database/search",
-      queryParams: { q: query },
-    });
-
-    if (result.isErr()) {
-      return new Response(`Search failed: ${result.error.message}`, {
-        status: 500,
-      });
-    }
-
-    return Response.json(result.value);
+const client = createDiscogsClient({
+  credentials: {
+    consumerKey: "your-consumer-key",
+    consumerSecret: "your-consumer-secret",
+    token: "user-access-token",
+    tokenSecret: "user-access-token-secret",
   },
-};
+  userAgent: "MyApp/1.0 +https://example.com",
+});
+```
+
+### Proxy Mode (Frontend)
+
+For frontend apps, deploy a Cloudflare Worker proxy that holds app secrets. The
+frontend only sends user credentials per request.
+
+**Frontend client:**
+
+```typescript
+const client = createDiscogsClient({
+  mode: "proxy",
+  proxy: { url: "https://your-worker.workers.dev" },
+  userCredentials: {
+    token: "user-oauth-token",
+    tokenSecret: "user-oauth-token-secret",
+  },
+});
+```
+
+**Worker setup:** See the complete example in
+[`examples/cloudflare-worker/`](./examples/cloudflare-worker/).
+
+## Response Structure
+
+All successful responses are wrapped in `DiscogsResponse<T>`:
+
+```typescript
+interface DiscogsResponse<T> {
+  data: T; // The actual API response data
+  rateLimit: {
+    // Discogs rate limit info from headers
+    limit: number; // Max requests per minute
+    used: number; // Requests used in current window
+    remaining: number;
+  };
+}
 ```
 
 ## Using the Result Pattern
@@ -93,11 +109,10 @@ The client uses the [neverthrow](https://github.com/supermacro/neverthrow)
 library for error handling:
 
 ```typescript
-// Making a request with query parameters
 const result = await client.request({
   method: "GET",
   endpoint: "/releases/{release_id}",
-  pathParams: { release_id: "249504" },
+  pathParams: { release_id: 249504 },
   queryParams: { curr_abbr: "USD" },
 });
 
@@ -107,9 +122,10 @@ if (result.isErr()) {
   return;
 }
 
-// Safely access the successful result
-const release = result.value;
+// Access the response data and rate limit info
+const { data: release, rateLimit } = result.value;
 console.log(`${release.title} (${release.year})`);
+console.log(`Rate limit: ${rateLimit.remaining}/${rateLimit.limit}`);
 ```
 
 ### Error Types
@@ -121,6 +137,7 @@ The client returns structured errors with the following types:
 - `API_ERROR` - Server-side errors (5xx) or other client errors
 - `NETWORK_ERROR` - Network connectivity issues
 - `PARSE_ERROR` - Failed to parse API response as JSON
+- `RATE_LIMIT_ERROR` - Rate limit exceeded (429)
 
 ```typescript
 if (result.isErr()) {
@@ -128,8 +145,8 @@ if (result.isErr()) {
     case "AUTH_ERROR":
       // Handle authentication issues
       break;
-    case "PARSE_ERROR":
-      // Handle malformed response
+    case "RATE_LIMIT_ERROR":
+      // Handle rate limiting - wait and retry
       break;
       // ...
   }
@@ -212,17 +229,31 @@ repository settings.
 const client = createDiscogsClient(config: DiscogsClientConfig);
 ```
 
-#### Configuration
+#### Configuration (Direct Mode)
 
 ```typescript
-type DiscogsClientConfig = {
+type DirectModeConfig = {
+  mode?: "direct";
   credentials: {
     consumerKey: string;
     consumerSecret: string;
     token?: string;
     tokenSecret?: string;
   };
-  userAgent: string; // Required: Your app identifier
+  userAgent: string;
+};
+```
+
+#### Configuration (Proxy Mode)
+
+```typescript
+type ProxyModeConfig = {
+  mode: "proxy";
+  proxy: { url: string };
+  userCredentials: {
+    token: string;
+    tokenSecret: string;
+  };
 };
 ```
 
@@ -230,27 +261,15 @@ type DiscogsClientConfig = {
 
 ```typescript
 client.request({
-  method: "GET" | "POST" | "PUT" | "DELETE", // HTTP method
-  endpoint: string, // API endpoint path with {param} placeholders
-  pathParams: Record<string, string | number>, // Path parameters
-  queryParams: Record<string, string>, // Query parameters
-  headers: Record<string, string>, // Additional headers
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  endpoint: string, // API endpoint with {param} placeholders
+  pathParams?: Record<string, string | number>,
+  queryParams?: Record<string, string>,
+  headers?: Record<string, string>,
 });
 ```
 
-Path parameters use curly brace syntax: `/releases/{release_id}`. An error will
-be thrown if any path parameters are missing.
-
-## Environment Variables
-
-For authenticated requests, set these environment variables:
-
-```bash
-DISCOGS_CONSUMER_KEY=your-consumer-key
-DISCOGS_CONSUMER_SECRET=your-consumer-secret
-DISCOGS_ACCESS_TOKEN=your-access-token
-DISCOGS_ACCESS_TOKEN_SECRET=your-access-token-secret
-```
+Path parameters use curly brace syntax: `/releases/{release_id}`.
 
 ## License
 
