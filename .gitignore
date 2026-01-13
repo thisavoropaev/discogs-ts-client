@@ -47,3 +47,7 @@ Thumbs.db
 
 # Build output
 npm/
+
+# Local dev worker
+tests/local/proxy-worker/.dev.vars
+tests/local/proxy-worker/node_modules/

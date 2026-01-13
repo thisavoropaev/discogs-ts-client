@@ -12,7 +12,7 @@ const PROXY_URL = `http://localhost:${PROXY_PORT}`;
 const startWrangler = (): Deno.ChildProcess => {
   const cmd = new Deno.Command("pnpm", {
     args: ["exec", "wrangler", "dev", "--port", String(PROXY_PORT)],
-    cwd: "./examples/cloudflare-worker",
+    cwd: "./tests/local/proxy-worker",
     stdout: "piped",
     stderr: "piped",
   });
