@@ -7,9 +7,9 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@thisavoropaev/discogs-ts-client": "^0.9.0"
+    "@thisavoropaev/discogs-ts-client": "npm:@jsr/thisavoropaev__discogs-ts-client@*"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.58.0"
   }
 }
