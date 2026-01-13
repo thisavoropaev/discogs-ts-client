@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "paths": {
+      "oauth-1a": ["./node_modules/@thisavoropaev/oauth-1a"],
+      "@/*": ["../../src/*"]
+    }
+  },
+  "include": ["src/**/*", "../../src/**/*"]
+}

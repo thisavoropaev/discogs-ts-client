@@ -1,0 +1,10 @@
+{
+  "name": "proxy-worker-dev",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --port 8787"
+  },
+  "devDependencies": {
+    "wrangler": "^4.58.0"
+  }
+}
