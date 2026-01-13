@@ -3,6 +3,7 @@ import type { OAuthCredentials } from "./auth.ts";
 import type {
   DiscogsApiError,
   EndpointResponseMap,
+  RateLimitInfo,
   RequestParams,
 } from "./mod.ts";
 import type { ProxyConfig, UserCredentials } from "./proxy.ts";
@@ -21,6 +22,11 @@ export type ProxyModeConfig = {
 
 export type DiscogsClientConfig = DirectModeConfig | ProxyModeConfig;
 
+export interface DiscogsResponse<T> {
+  data: T;
+  rateLimit: RateLimitInfo;
+}
+
 export type DiscogsClient = {
   request: <
     TMethod extends keyof EndpointResponseMap,
@@ -28,6 +34,9 @@ export type DiscogsClient = {
   >(
     params: RequestParams<TMethod, TEndpoint>,
   ) => Promise<
-    Result<EndpointResponseMap[TMethod][TEndpoint], DiscogsApiError>
+    Result<
+      DiscogsResponse<EndpointResponseMap[TMethod][TEndpoint]>,
+      DiscogsApiError
+    >
   >;
 };

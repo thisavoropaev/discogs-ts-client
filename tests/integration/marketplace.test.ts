@@ -21,7 +21,7 @@ Deno.test("Marketplace Tests", async (t) => {
         );
       }
 
-      const stats = result.value;
+      const stats = result.value.data;
       assertExists(stats);
       assertEquals(typeof stats, "object");
 
@@ -69,7 +69,7 @@ Deno.test("Marketplace Tests", async (t) => {
         );
       }
 
-      const stats = result.value;
+      const stats = result.value.data;
       assertExists(stats);
       assertEquals(typeof stats, "object");
 

@@ -2,10 +2,12 @@ import { err, ok, type Result } from "neverthrow";
 import { buildPath, buildRequestUrl } from "./url.ts";
 import { createAuthorizationHeader } from "./auth.ts";
 import { createProxyClient } from "./proxy-client.ts";
+import { parseRateLimitHeaders } from "./rate-limit.ts";
 import type {
   DiscogsApiError,
   DiscogsClient,
   DiscogsClientConfig,
+  DiscogsResponse,
   EndpointResponseMap,
   RequestParams,
 } from "./types/mod.ts";
@@ -34,7 +36,10 @@ export const createDiscogsClient = (
     >(
       params: RequestParams<TMethod, TEndpoint>,
     ): Promise<
-      Result<EndpointResponseMap[TMethod][TEndpoint], DiscogsApiError>
+      Result<
+        DiscogsResponse<EndpointResponseMap[TMethod][TEndpoint]>,
+        DiscogsApiError
+      >
     > => {
       const path = buildPath(params.endpoint as string, params.pathParams);
       const baseUrl = `${DISCOGS_API_URL}/${path.replace(/^\//, "")}`;
@@ -66,9 +71,9 @@ export const createDiscogsClient = (
           headers,
         });
 
-        return handleApiResponse<EndpointResponseMap[TMethod][TEndpoint]>(
-          response,
-        );
+        return handleApiResponse<
+          EndpointResponseMap[TMethod][TEndpoint]
+        >(response);
       } catch (error) {
         const message = error instanceof Error
           ? error.message
@@ -84,7 +89,9 @@ export const createDiscogsClient = (
 
 async function handleApiResponse<T>(
   response: Response,
-): Promise<Result<T, DiscogsApiError>> {
+): Promise<Result<DiscogsResponse<T>, DiscogsApiError>> {
+  const rateLimit = parseRateLimitHeaders(response.headers);
+
   if (!response.ok) {
     const text = await response.text().catch(() => response.statusText);
     return err({
@@ -96,7 +103,7 @@ async function handleApiResponse<T>(
 
   try {
     const data = (await response.json()) as T;
-    return ok(data);
+    return ok({ data, rateLimit });
   } catch (error) {
     return err({
       message: error instanceof Error
@@ -109,6 +116,7 @@ async function handleApiResponse<T>(
 
 function getApiErrorType(status: number): DiscogsApiError["type"] {
   if (status === 401) return "AUTH_ERROR";
+  if (status === 429) return "RATE_LIMIT_ERROR";
   if (status >= 400 && status < 500) return "VALIDATION_ERROR";
   return "API_ERROR";
 }

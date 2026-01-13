@@ -109,7 +109,14 @@ export const createProxyHandler = (
       });
 
       if (result.isOk()) {
-        return jsonResponse({ success: true, data: result.value }, corsHeaders);
+        return jsonResponse(
+          {
+            success: true,
+            data: result.value.data,
+            rateLimit: result.value.rateLimit,
+          },
+          corsHeaders,
+        );
       }
 
       return jsonResponse(
@@ -171,6 +178,9 @@ function jsonResponse(
         break;
       case "VALIDATION_ERROR":
         responseStatus = 400;
+        break;
+      case "RATE_LIMIT_ERROR":
+        responseStatus = 429;
         break;
       default:
         responseStatus = data.error.statusCode ?? 500;

@@ -10,8 +10,14 @@ export type {
   DirectModeConfig,
   DiscogsClient,
   DiscogsClientConfig,
+  DiscogsResponse,
   ProxyModeConfig,
 } from "./types/client.ts";
+export type {
+  DiscogsApiError,
+  DiscogsApiErrorType,
+  RateLimitInfo,
+} from "./types/common.ts";
 export type {
   ProxyConfig,
   ProxyErrorPayload,

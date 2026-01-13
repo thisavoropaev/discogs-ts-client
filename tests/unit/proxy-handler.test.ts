@@ -220,7 +220,14 @@ Deno.test("ProxyHandler - successful Discogs response returns success", async ()
     "fetch",
     () =>
       Promise.resolve(
-        new Response(JSON.stringify(mockData), { status: 200 }),
+        new Response(JSON.stringify(mockData), {
+          status: 200,
+          headers: {
+            "x-discogs-ratelimit": "60",
+            "x-discogs-ratelimit-used": "5",
+            "x-discogs-ratelimit-remaining": "55",
+          },
+        }),
       ),
   );
 
@@ -232,6 +239,7 @@ Deno.test("ProxyHandler - successful Discogs response returns success", async ()
     assertEquals(data.success, true);
     if (data.success) {
       assertEquals(data.data, mockData);
+      assertEquals(data.rateLimit, { limit: 60, used: 5, remaining: 55 });
     }
   } finally {
     fetchStub.restore();

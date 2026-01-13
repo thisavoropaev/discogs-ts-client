@@ -24,6 +24,7 @@ const createProxyConfig = (): ProxyModeConfig => ({
 const createSuccessResponse = <T>(data: T): ProxyResponse<T> => ({
   success: true,
   data,
+  rateLimit: { limit: 60, used: 1, remaining: 59 },
 });
 
 const createErrorResponse = (

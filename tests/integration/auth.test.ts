@@ -18,7 +18,7 @@ Deno.test("Authentication Tests", async (t) => {
         throw new Error(`Identity request failed: ${result.error.message}`);
       }
 
-      const identity = result.value;
+      const identity = result.value.data;
       assertExists(identity.id);
       assertExists(identity.username);
       assertExists(identity.resource_url);
@@ -46,7 +46,7 @@ Deno.test("Authentication Tests", async (t) => {
         );
       }
 
-      const identity = result.value;
+      const identity = result.value.data;
       assertExists(identity.id);
       assertExists(identity.username);
 

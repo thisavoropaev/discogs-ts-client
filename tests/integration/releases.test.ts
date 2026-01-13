@@ -24,7 +24,7 @@ Deno.test("Releases and Masters Tests", async (t) => {
         throw new Error(`Release request failed: ${result.error.message}`);
       }
 
-      const release = result.value;
+      const release = result.value.data;
       assertExists(release.id);
       assertExists(release.title);
       assertExists(release.artists);
@@ -54,7 +54,7 @@ Deno.test("Releases and Masters Tests", async (t) => {
         throw new Error(`Query params request failed: ${result.error.message}`);
       }
 
-      const release = result.value;
+      const release = result.value.data;
       assertExists(release.id);
       assertExists(release.title);
 
@@ -99,7 +99,7 @@ Deno.test("Releases and Masters Tests", async (t) => {
         );
       }
 
-      const versions = result.value;
+      const versions = result.value.data;
       assertExists(versions.pagination);
       assertExists(versions.versions);
       assertEquals(Array.isArray(versions.versions), true);

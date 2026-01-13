@@ -30,7 +30,7 @@ Deno.test("Users and Collections Tests", async (t) => {
         throw new Error(`User profile request failed: ${result.error.message}`);
       }
 
-      const profile = result.value;
+      const profile = result.value.data;
       assertExists(profile.id);
       assertExists(profile.username);
       assertExists(profile.resource_url);
@@ -61,7 +61,7 @@ Deno.test("Users and Collections Tests", async (t) => {
         );
       }
 
-      const folders = result.value;
+      const folders = result.value.data;
       assertExists(folders.folders);
       assertEquals(Array.isArray(folders.folders), true);
 
