@@ -1,85 +1,132 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/claude-code) when working
-with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Project Overview
 
-This is a TypeScript client library for the Discogs API, published as
-`@thisavoropaev/discogs-ts-client` on JSR (JavaScript Registry). It's designed
-for edge runtime environments (Vercel Edge, Cloudflare Workers, Deno Deploy)
-with zero external runtime dependencies.
+TypeScript client library for the Discogs API, published as
+`@thisavoropaev/discogs-ts-client` on JSR. Designed for edge runtimes (Vercel
+Edge, Cloudflare Workers, Deno Deploy) with zero external runtime dependencies.
 
 ## Development Environment
 
-- **Runtime:** Deno 2.x (primary development environment)
-- **Module System:** ESM only (no CommonJS)
-- **TypeScript:** Strict mode enabled
+- **Runtime:** Deno 2.x
+- **Module System:** ESM only
+- **TypeScript:** Strict mode
 
-## Common Commands
+## Commands
 
 ```bash
-# Run all tests (unit + integration)
-deno task test
+deno task test              # Run all tests (unit + integration)
+deno task test:unit         # Unit tests only
+deno task test:integration  # Integration tests (requires .env)
+deno task check             # Type check
+deno task lint              # Lint
+deno fmt                    # Format
 
-# Run only unit tests
-deno task test:unit
+# Run a single test file
+deno test tests/unit/auth.test.ts --allow-net --allow-env
 
-# Run only integration tests (requires .env with OAuth credentials)
-deno task test:integration
+# Run specific integration test suites
+deno task test:integration:releases
+deno task test:integration:users
+deno task test:integration:database
+deno task test:integration:marketplace
+deno task test:integration:artists-labels
+deno task test:integration:auth
 
-# Type checking
-deno task check
-
-# Linting
-deno task lint
-
-# Formatting
-deno fmt
+# Local proxy testing (requires wrangler)
+deno task test:local:proxy
 ```
 
 ## Architecture
 
-### Source Structure
+### Two Client Modes
 
-- `src/mod.ts` - Public entry point and exports
-- `src/discogs-client.ts` - Main client factory and request handler
-- `src/auth.ts` - OAuth 1.0a authentication logic
-- `src/url.ts` - URL building utilities
-- `src/types/` - TypeScript type definitions for all endpoints
+The client factory (`createDiscogsClient`) supports two modes via discriminated
+union config:
 
-### Key Patterns
-
-**Error Handling:** Uses `neverthrow` for Result-based error handling. All async
-operations return `Result<T, Error>` instead of throwing exceptions.
+1. **Direct mode** (default): Server-side usage with full OAuth credentials
+2. **Proxy mode**: Frontend usage via a Cloudflare Worker that holds app secrets
 
 ```typescript
-const result = await client.get("/releases/{release_id}", {
-  release_id: 249504,
+// Direct mode - server-side
+const client = createDiscogsClient({
+  credentials: { consumerKey, consumerSecret, token, tokenSecret },
+  userAgent: "MyApp/1.0",
 });
-if (result.isOk()) {
-  console.log(result.value);
-} else {
-  console.error(result.error);
+
+// Proxy mode - frontend via worker
+const client = createDiscogsClient({
+  mode: "proxy",
+  proxy: { url: "https://your-worker.workers.dev" },
+  userCredentials: { token, tokenSecret },
+});
+```
+
+### Proxy Architecture
+
+For frontend apps, deploy `createProxyHandler` as a Cloudflare Worker:
+
+- Worker holds `consumerKey`/`consumerSecret` (app secrets)
+- Frontend sends user's `token`/`tokenSecret` per request
+- Worker creates fresh client per request with combined credentials
+
+### Key Source Files
+
+- `src/mod.ts` - Public exports
+- `src/discogs-client.ts` - Client factory (routes to direct or proxy client)
+- `src/proxy-client.ts` - Proxy mode implementation
+- `src/proxy-handler.ts` - Cloudflare Worker handler
+- `src/auth.ts` - OAuth 1.0a signature generation
+- `src/rate-limit.ts` - Parses rate limit headers from Discogs responses
+- `src/types/endpoint-response-map.ts` - Endpoint → response type mapping
+
+### Type System
+
+Endpoints are mapped to response types via `EndpointResponseMap`. The generic
+`request` method infers return types based on HTTP method + endpoint path:
+
+```typescript
+// Return type is automatically DiscogsResponse<GetReleaseResponse>
+const result = await client.request({
+  method: "GET",
+  endpoint: "/releases/{release_id}",
+  pathParams: { release_id: 249504 },
+});
+```
+
+### Response Structure
+
+All successful responses are wrapped in `DiscogsResponse<T>`:
+
+```typescript
+interface DiscogsResponse<T> {
+  data: T; // The actual API response data
+  rateLimit: { // Discogs rate limit info from headers
+    limit: number; // Max requests per minute
+    used: number; // Requests used in current window
+    remaining: number;
+  };
 }
 ```
 
-**Type-Safe Endpoints:** Endpoints are mapped to their response types via
-`EndpointResponseMap`. The generic request method infers return types based on
-HTTP method + endpoint path.
+### Error Handling
 
-**OAuth 1.0a:** Custom implementation using `@thisavoropaev/oauth-1a` for
-HMAC-SHA1 signature generation.
+Uses `neverthrow` for Result-based error handling. All async operations return
+`Result<DiscogsResponse<T>, DiscogsApiError>`. Error types:
 
-### Tests
-
-- **Unit tests:** `tests/unit/` - Test individual functions in isolation
-- **Integration tests:** `tests/integration/` - Test against live Discogs API
-  (require OAuth credentials in `.env`)
+- `AUTH_ERROR` - Authentication failed (401)
+- `VALIDATION_ERROR` - Invalid request (400, 422)
+- `API_ERROR` - Server errors (5xx)
+- `NETWORK_ERROR` - Network connectivity issues
+- `PARSE_ERROR` - Failed to parse JSON response
+- `RATE_LIMIT_ERROR` - Rate limit exceeded (429)
 
 ## Environment Variables
 
-For integration tests and authenticated requests, create a `.env` file with:
+For integration tests, create `.env`:
 
 ```
 DISCOGS_CONSUMER_KEY=your_key
@@ -91,16 +138,14 @@ DISCOGS_ACCESS_TOKEN_SECRET=your_token_secret
 ## Adding New Endpoints
 
 1. Add response types in `src/types/endpoints/`
-2. Map endpoint to response type in `src/types/endpoint-response-map.ts`
-3. Add integration tests in `tests/integration/`
+2. Export from `src/types/endpoints/mod.ts`
+3. Map endpoint to response type in `src/types/endpoint-response-map.ts`
+4. Add integration tests in `tests/integration/`
 
 ## Git Workflow
 
 - **NEVER push to `main` automatically.** Pushes to `main` trigger automatic
-  releases to JSR, so they must always be done manually by the user.
+  releases to JSR.
 - Work in feature branches or `development` branch.
-- Merges to `main` are done manually by the user via PR or direct push.
-- Use conventional commits for automatic version bumping:
-  - `feat:` → minor version bump
-  - `fix:`, `perf:`, `refactor:` → patch version bump
-  - `BREAKING CHANGE:` or `feat!:` → major version bump
+- Use conventional commits: `feat:` → minor, `fix:`/`perf:`/`refactor:` → patch,
+  `BREAKING CHANGE:` or `feat!:` → major
