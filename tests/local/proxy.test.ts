@@ -96,10 +96,11 @@ Deno.test("Proxy Mode Integration Tests", async (t) => {
           throw new Error(`Proxy request failed: ${result.error.message}`);
         }
 
-        const release = result.value;
+        const release = result.value.data;
         assertExists(release.id);
         assertExists(release.title);
         assertEquals(release.id, parseInt(TEST_RELEASE_ID));
+        assertExists(result.value.rateLimit);
         console.log(
           `✅ Release via proxy: ${release.title} by ${
             release.artists?.[0]?.name
@@ -121,8 +122,8 @@ Deno.test("Proxy Mode Integration Tests", async (t) => {
           throw new Error(`Identity request failed: ${result.error.message}`);
         }
 
-        assertExists(result.value.username);
-        console.log(`✅ Identity via proxy: ${result.value.username}`);
+        assertExists(result.value.data.username);
+        console.log(`✅ Identity via proxy: ${result.value.data.username}`);
       },
     );
 
