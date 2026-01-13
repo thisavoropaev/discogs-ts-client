@@ -80,6 +80,7 @@ For frontend apps, deploy `createProxyHandler` as a Cloudflare Worker:
 - `src/proxy-client.ts` - Proxy mode implementation
 - `src/proxy-handler.ts` - Cloudflare Worker handler
 - `src/auth.ts` - OAuth 1.0a signature generation
+- `src/rate-limit.ts` - Parses rate limit headers from Discogs responses
 - `src/types/endpoint-response-map.ts` - Endpoint → response type mapping
 
 ### Type System
@@ -88,7 +89,7 @@ Endpoints are mapped to response types via `EndpointResponseMap`. The generic
 `request` method infers return types based on HTTP method + endpoint path:
 
 ```typescript
-// Return type is automatically GetReleaseResponse
+// Return type is automatically DiscogsResponse<GetReleaseResponse>
 const result = await client.request({
   method: "GET",
   endpoint: "/releases/{release_id}",
@@ -96,11 +97,32 @@ const result = await client.request({
 });
 ```
 
+### Response Structure
+
+All successful responses are wrapped in `DiscogsResponse<T>`:
+
+```typescript
+interface DiscogsResponse<T> {
+  data: T; // The actual API response data
+  rateLimit: { // Discogs rate limit info from headers
+    limit: number; // Max requests per minute
+    used: number; // Requests used in current window
+    remaining: number;
+  };
+}
+```
+
 ### Error Handling
 
 Uses `neverthrow` for Result-based error handling. All async operations return
-`Result<T, DiscogsApiError>`. Error types: `AUTH_ERROR`, `VALIDATION_ERROR`,
-`API_ERROR`, `NETWORK_ERROR`, `PARSE_ERROR`.
+`Result<DiscogsResponse<T>, DiscogsApiError>`. Error types:
+
+- `AUTH_ERROR` - Authentication failed (401)
+- `VALIDATION_ERROR` - Invalid request (400, 422)
+- `API_ERROR` - Server errors (5xx)
+- `NETWORK_ERROR` - Network connectivity issues
+- `PARSE_ERROR` - Failed to parse JSON response
+- `RATE_LIMIT_ERROR` - Rate limit exceeded (429)
 
 ## Environment Variables
 
@@ -116,8 +138,9 @@ DISCOGS_ACCESS_TOKEN_SECRET=your_token_secret
 ## Adding New Endpoints
 
 1. Add response types in `src/types/endpoints/`
-2. Map endpoint to response type in `src/types/endpoint-response-map.ts`
-3. Add integration tests in `tests/integration/`
+2. Export from `src/types/endpoints/mod.ts`
+3. Map endpoint to response type in `src/types/endpoint-response-map.ts`
+4. Add integration tests in `tests/integration/`
 
 ## Git Workflow
 
