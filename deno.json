@@ -20,7 +20,7 @@
     "strict": true
   },
   "imports": {
-    "neverthrow": "npm:neverthrow@6.2.2",
+    "neverthrow": "npm:neverthrow@^8.2.0",
     "oauth-1a": "jsr:@thisavoropaev/oauth-1a@^1.0.0",
     "dotenv": "jsr:@std/dotenv/load",
     "@std/assert": "jsr:@std/assert",
