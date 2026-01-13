@@ -28,9 +28,9 @@
     "@/": "./src/"
   },
   "tasks": {
-    "test": "deno test tests/unit/ tests/integration/ --ignore=tests/integration/proxy-production.test.ts --allow-net --allow-env --allow-read",
+    "test": "deno test tests/unit/ tests/integration/ --allow-net --allow-env --allow-read",
     "test:unit": "deno test tests/unit/ --allow-net --allow-env",
-    "test:integration": "deno test tests/integration/ --ignore=tests/integration/proxy-production.test.ts --allow-net --allow-env --allow-read",
+    "test:integration": "deno test tests/integration/ --allow-net --allow-env --allow-read",
     "test:local:proxy": "deno test tests/local/proxy.test.ts --allow-net --allow-env --allow-read --allow-run",
     "test:proxy": "deno test tests/integration/proxy-production.test.ts --allow-net --allow-env --allow-read",
     "test:integration:auth": "deno test tests/integration/auth.test.ts --allow-net --allow-env --allow-read",
