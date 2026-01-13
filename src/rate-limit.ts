@@ -1,13 +1,21 @@
 import type { RateLimitInfo } from "./types/common.ts";
 
-export function parseRateLimitHeaders(headers: Headers): RateLimitInfo {
-  const limit = headers.get("x-discogs-ratelimit");
-  const used = headers.get("x-discogs-ratelimit-used");
-  const remaining = headers.get("x-discogs-ratelimit-remaining");
+function parseNonNegativeInt(
+  value: string | null,
+  defaultValue: number,
+): number {
+  if (!value) return defaultValue;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) || parsed < 0 ? defaultValue : parsed;
+}
 
+export function parseRateLimitHeaders(headers: Headers): RateLimitInfo {
   return {
-    limit: limit ? parseInt(limit, 10) : 60,
-    used: used ? parseInt(used, 10) : 0,
-    remaining: remaining ? parseInt(remaining, 10) : 60,
+    limit: parseNonNegativeInt(headers.get("x-discogs-ratelimit"), 60),
+    used: parseNonNegativeInt(headers.get("x-discogs-ratelimit-used"), 0),
+    remaining: parseNonNegativeInt(
+      headers.get("x-discogs-ratelimit-remaining"),
+      60,
+    ),
   };
 }

@@ -58,3 +58,35 @@ Deno.test("parseRateLimitHeaders - handles zero values", () => {
     remaining: 0,
   });
 });
+
+Deno.test("parseRateLimitHeaders - handles invalid non-numeric values", () => {
+  const headers = new Headers({
+    "x-discogs-ratelimit": "abc",
+    "x-discogs-ratelimit-used": "not-a-number",
+    "x-discogs-ratelimit-remaining": "",
+  });
+
+  const result = parseRateLimitHeaders(headers);
+
+  assertEquals(result, {
+    limit: 60,
+    used: 0,
+    remaining: 60,
+  });
+});
+
+Deno.test("parseRateLimitHeaders - handles negative values", () => {
+  const headers = new Headers({
+    "x-discogs-ratelimit": "-10",
+    "x-discogs-ratelimit-used": "-5",
+    "x-discogs-ratelimit-remaining": "-1",
+  });
+
+  const result = parseRateLimitHeaders(headers);
+
+  assertEquals(result, {
+    limit: 60,
+    used: 0,
+    remaining: 60,
+  });
+});
