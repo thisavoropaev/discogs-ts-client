@@ -21,16 +21,26 @@ const startWrangler = (): Deno.ChildProcess => {
 
 const waitForWranglerReady = async (timeout = 30000): Promise<void> => {
   const start = Date.now();
+  let attempts = 0;
+  let lastError: string | undefined;
+
   while (Date.now() - start < timeout) {
     try {
       const resp = await fetch(PROXY_URL);
       await resp.body?.cancel();
       return;
-    } catch {
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : String(e);
+      attempts++;
+      if (attempts % 10 === 0) {
+        console.log(`Waiting for wrangler (attempt ${attempts}): ${lastError}`);
+      }
       await new Promise((r) => setTimeout(r, 500));
     }
   }
-  throw new Error("Wrangler did not start in time");
+  throw new Error(
+    `Wrangler did not start in time after ${attempts} attempts. Last error: ${lastError}`,
+  );
 };
 
 const stopWrangler = async (wrangler: Deno.ChildProcess): Promise<void> => {
