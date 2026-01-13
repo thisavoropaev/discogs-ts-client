@@ -2,6 +2,7 @@ import { err, ok, type Result } from "neverthrow";
 import type {
   DiscogsApiError,
   DiscogsClient,
+  DiscogsResponse,
   EndpointResponseMap,
   ProxyModeConfig,
   ProxyRequestBody,
@@ -19,7 +20,10 @@ export const createProxyClient = (
     >(
       params: RequestParams<TMethod, TEndpoint>,
     ): Promise<
-      Result<EndpointResponseMap[TMethod][TEndpoint], DiscogsApiError>
+      Result<
+        DiscogsResponse<EndpointResponseMap[TMethod][TEndpoint]>,
+        DiscogsApiError
+      >
     > => {
       const body: ProxyRequestBody = {
         method: params.method,
@@ -77,7 +81,10 @@ export const createProxyClient = (
       }
 
       if (proxyResponse.success) {
-        return ok(proxyResponse.data);
+        return ok({
+          data: proxyResponse.data,
+          rateLimit: proxyResponse.rateLimit,
+        });
       }
 
       return err({
@@ -96,6 +103,7 @@ function mapErrorType(type: string): DiscogsApiError["type"] {
     "API_ERROR",
     "VALIDATION_ERROR",
     "PARSE_ERROR",
+    "RATE_LIMIT_ERROR",
   ];
   if (validTypes.includes(type as DiscogsApiError["type"])) {
     return type as DiscogsApiError["type"];

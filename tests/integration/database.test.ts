@@ -19,7 +19,7 @@ Deno.test("Database Search Tests", async (t) => {
         throw new Error(`Search request failed: ${result.error.message}`);
       }
 
-      const searchResults = result.value;
+      const searchResults = result.value.data;
       assertExists(searchResults.pagination);
       assertExists(searchResults.results);
       assertEquals(Array.isArray(searchResults.results), true);
@@ -48,7 +48,7 @@ Deno.test("Database Search Tests", async (t) => {
         throw new Error(`Search pagination failed: ${result.error.message}`);
       }
 
-      const searchResults = result.value;
+      const searchResults = result.value.data;
       assertExists(searchResults.pagination);
       assertEquals(searchResults.pagination.page, 2);
       assertExists(searchResults.pagination.urls);

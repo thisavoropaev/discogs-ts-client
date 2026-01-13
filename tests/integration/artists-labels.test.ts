@@ -19,7 +19,7 @@ Deno.test("Artists and Labels Tests", async (t) => {
         throw new Error(`Artist request failed: ${result.error.message}`);
       }
 
-      const artist = result.value;
+      const artist = result.value.data;
       assertExists(artist.id);
       assertExists(artist.name);
       assertExists(artist.resource_url);
@@ -46,7 +46,7 @@ Deno.test("Artists and Labels Tests", async (t) => {
         throw new Error(`Label request failed: ${result.error.message}`);
       }
 
-      const label = result.value;
+      const label = result.value.data;
       assertExists(label.id);
       assertExists(label.name);
       assertExists(label.resource_url);

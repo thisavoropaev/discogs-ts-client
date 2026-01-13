@@ -43,7 +43,7 @@ export const getCurrentUsername = async (
     throw new Error(`Failed to get identity: ${result.error.message}`);
   }
 
-  return result.value.username;
+  return result.value.data.username;
 };
 
 export const logSuccess = (message: string): void => {

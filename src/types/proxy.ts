@@ -1,4 +1,8 @@
-import type { DiscogsApiErrorType, HttpMethod } from "./common.ts";
+import type {
+  DiscogsApiErrorType,
+  HttpMethod,
+  RateLimitInfo,
+} from "./common.ts";
 
 export type UserCredentials = {
   token: string;
@@ -24,5 +28,5 @@ export type ProxyErrorPayload = {
 };
 
 export type ProxyResponse<T = unknown> =
-  | { success: true; data: T }
+  | { success: true; data: T; rateLimit: RateLimitInfo }
   | { success: false; error: ProxyErrorPayload };
