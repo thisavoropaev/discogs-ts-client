@@ -16,9 +16,16 @@ jobs:
           deno-version: 2.x
       - name: Wait for rate limit reset
         run: sleep 65
-      - run: deno task test
+      - name: Run unit and integration tests
+        run: deno task test
         env:
           DISCOGS_CONSUMER_KEY: ${{ secrets.DISCOGS_CONSUMER_KEY }}
           DISCOGS_CONSUMER_SECRET: ${{ secrets.DISCOGS_CONSUMER_SECRET }}
+          DISCOGS_ACCESS_TOKEN: ${{ secrets.DISCOGS_ACCESS_TOKEN }}
+          DISCOGS_ACCESS_TOKEN_SECRET: ${{ secrets.DISCOGS_ACCESS_TOKEN_SECRET }}
+      - name: Run proxy production tests
+        run: deno task test:proxy
+        env:
+          PROXY_WORKER_URL: ${{ secrets.PROXY_WORKER_URL }}
           DISCOGS_ACCESS_TOKEN: ${{ secrets.DISCOGS_ACCESS_TOKEN }}
           DISCOGS_ACCESS_TOKEN_SECRET: ${{ secrets.DISCOGS_ACCESS_TOKEN_SECRET }}
