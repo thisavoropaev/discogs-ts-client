@@ -1,0 +1,28 @@
+import type { DiscogsApiErrorType, HttpMethod } from "./common.ts";
+
+export type UserCredentials = {
+  token: string;
+  tokenSecret: string;
+};
+
+export type ProxyConfig = {
+  url: string;
+};
+
+export type ProxyRequestBody = {
+  method: HttpMethod;
+  endpoint: string;
+  pathParams?: Record<string, string | number>;
+  queryParams?: Record<string, string | number | boolean>;
+  userCredentials: UserCredentials;
+};
+
+export type ProxyErrorPayload = {
+  type: DiscogsApiErrorType;
+  message: string;
+  statusCode?: number;
+};
+
+export type ProxyResponse<T = unknown> =
+  | { success: true; data: T }
+  | { success: false; error: ProxyErrorPayload };

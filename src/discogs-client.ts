@@ -1,6 +1,7 @@
 import { err, ok, type Result } from "neverthrow";
 import { buildPath, buildRequestUrl } from "./url.ts";
 import { createAuthorizationHeader } from "./auth.ts";
+import { createProxyClient } from "./proxy-client.ts";
 import type {
   DiscogsApiError,
   DiscogsClient,
@@ -14,6 +15,14 @@ const DISCOGS_API_URL = "https://api.discogs.com";
 export const createDiscogsClient = (
   config: DiscogsClientConfig,
 ): DiscogsClient => {
+  if (config.mode === "proxy") {
+    return createProxyClient(config);
+  }
+
+  if (!config.credentials?.consumerKey || !config.credentials?.consumerSecret) {
+    throw new Error("Consumer key and secret are required");
+  }
+
   if (!config.userAgent) {
     throw new Error("User agent is required");
   }

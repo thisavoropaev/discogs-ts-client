@@ -5,11 +5,21 @@ import type {
   EndpointResponseMap,
   RequestParams,
 } from "./mod.ts";
+import type { ProxyConfig, UserCredentials } from "./proxy.ts";
 
-export type DiscogsClientConfig = {
+export type DirectModeConfig = {
+  mode?: "direct";
   credentials: OAuthCredentials;
   userAgent: string;
 };
+
+export type ProxyModeConfig = {
+  mode: "proxy";
+  proxy: ProxyConfig;
+  userCredentials: UserCredentials;
+};
+
+export type DiscogsClientConfig = DirectModeConfig | ProxyModeConfig;
 
 export type DiscogsClient = {
   request: <
