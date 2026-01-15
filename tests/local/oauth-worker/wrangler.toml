@@ -1,7 +1,0 @@
-name = "discogs-oauth-dev"
-main = "worker.ts"
-compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat_v2"]
-
-[vars]
-USER_AGENT = "DiscogsOAuth/1.0 (dev)"
