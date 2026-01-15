@@ -1,0 +1,15 @@
+{
+  "name": "discogs-oauth-example",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@thisavoropaev/discogs-ts-client": "npm:@jsr/thisavoropaev__discogs-ts-client@*"
+  },
+  "devDependencies": {
+    "wrangler": "^4.58.0"
+  }
+}

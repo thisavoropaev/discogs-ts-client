@@ -5,6 +5,7 @@ export {
   type ProxyHandler,
   type ProxyHandlerConfig,
 } from "./proxy-handler.ts";
+export { createOAuthFlow } from "./oauth-flow.ts";
 
 export type {
   DirectModeConfig,

@@ -12,3 +12,4 @@ export * from "./user_collection_items.ts";
 export * from "./user_identity.ts";
 export * from "./user_profile.ts";
 export * from "./user_wantlist.ts";
+export * from "./oauth.ts";
