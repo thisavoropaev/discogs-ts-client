@@ -6,6 +6,10 @@
 
 - add OAuth flow endpoints (#18)
 
+# <<<<<<< HEAD
+
+>>>>>>> origin
+
 ## [1.0.0] - 2026-01-13
 
 ### Breaking Changes
