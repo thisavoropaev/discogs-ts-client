@@ -6,6 +6,7 @@ import type {
   OAuthFlowConfig,
   RequestTokenResponse,
 } from "./types/mod.ts";
+import { getApiErrorType } from "./errors.ts";
 
 const DISCOGS_API_URL = "https://api.discogs.com";
 const DISCOGS_AUTH_URL = "https://discogs.com";
@@ -79,7 +80,9 @@ export const createOAuthFlow = (config: OAuthFlowConfig): OAuthFlow => {
   };
 
   const getAuthorizeUrl = (requestToken: string): string =>
-    `${DISCOGS_AUTH_URL}/oauth/authorize?oauth_token=${requestToken}`;
+    `${DISCOGS_AUTH_URL}/oauth/authorize?oauth_token=${
+      encodeURIComponent(requestToken)
+    }`;
 
   const getAccessToken = async (
     requestToken: string,
@@ -145,11 +148,4 @@ function parseFormUrlEncoded(text: string): Record<string, string> {
     }
   }
   return result;
-}
-
-function getApiErrorType(status: number): DiscogsApiError["type"] {
-  if (status === 401) return "AUTH_ERROR";
-  if (status === 429) return "RATE_LIMIT_ERROR";
-  if (status >= 400 && status < 500) return "VALIDATION_ERROR";
-  return "API_ERROR";
 }

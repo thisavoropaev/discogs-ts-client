@@ -17,7 +17,15 @@ export default {
         consumerSecret: env.DISCOGS_CONSUMER_SECRET,
         userAgent: env.USER_AGENT,
       });
-      const body = (await request.json()) as { callback_url: string };
+      let body: { callback_url: string };
+      try {
+        body = (await request.json()) as { callback_url: string };
+      } catch {
+        return Response.json(
+          { success: false, error: "Invalid JSON" },
+          { status: 400 },
+        );
+      }
       const result = await oauth.getRequestToken(body.callback_url);
 
       if (result.isErr()) {
@@ -42,11 +50,19 @@ export default {
         consumerSecret: env.DISCOGS_CONSUMER_SECRET,
         userAgent: env.USER_AGENT,
       });
-      const body = (await request.json()) as {
+      let body: {
         requestToken: string;
         requestTokenSecret: string;
         oauthVerifier: string;
       };
+      try {
+        body = await request.json();
+      } catch {
+        return Response.json(
+          { success: false, error: "Invalid JSON" },
+          { status: 400 },
+        );
+      }
       const result = await oauth.getAccessToken(
         body.requestToken,
         body.requestTokenSecret,

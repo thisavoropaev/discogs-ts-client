@@ -51,5 +51,4 @@ npm/
 # Local dev worker
 tests/local/proxy-worker/.dev.vars
 tests/local/proxy-worker/node_modules/
-tests/local/oauth-worker/node_modules/
-tests/local/oauth-worker/node_modules/tests/local/proxy-worker/.wrangler/
+tests/local/proxy-worker/.wrangler/

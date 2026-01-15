@@ -28,11 +28,11 @@ Deno.test("OAuth Flow - getAuthorizeUrl builds correct URL", () => {
   );
 });
 
-Deno.test("OAuth Flow - getAuthorizeUrl handles special chars", () => {
+Deno.test("OAuth Flow - getAuthorizeUrl encodes special chars", () => {
   const flow = createOAuthFlow(TEST_CONFIG);
   const url = flow.getAuthorizeUrl("token+with=chars");
 
-  assertStringIncludes(url, "oauth_token=token+with=chars");
+  assertStringIncludes(url, "oauth_token=token%2Bwith%3Dchars");
 });
 
 Deno.test("OAuth Flow - getRequestToken returns network error on fetch fail", async () => {
