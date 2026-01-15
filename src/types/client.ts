@@ -17,7 +17,7 @@ export type DirectModeConfig = {
 export type ProxyModeConfig = {
   mode: "proxy";
   proxy: ProxyConfig;
-  userCredentials: UserCredentials;
+  userCredentials?: UserCredentials;
 };
 
 export type DiscogsClientConfig = DirectModeConfig | ProxyModeConfig;

@@ -18,7 +18,8 @@ export type ProxyRequestBody = {
   endpoint: string;
   pathParams?: Record<string, string | number>;
   queryParams?: Record<string, string | number | boolean>;
-  userCredentials: UserCredentials;
+  userCredentials?: UserCredentials;
+  oauthParams?: Record<string, string>;
 };
 
 export type ProxyErrorPayload = {

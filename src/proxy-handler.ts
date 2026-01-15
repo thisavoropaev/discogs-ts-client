@@ -80,11 +80,20 @@ export const createProxyHandler = (
       );
     }
 
-    if (!body.userCredentials?.token || !body.userCredentials?.tokenSecret) {
+    const isRequestToken = body.endpoint === "/oauth/request_token";
+    const isAccessToken = body.endpoint === "/oauth/access_token";
+
+    if (
+      isAccessToken &&
+      (!body.userCredentials?.token || !body.userCredentials?.tokenSecret)
+    ) {
       return jsonResponse(
         {
           success: false,
-          error: { type: "AUTH_ERROR", message: "User credentials required" },
+          error: {
+            type: "AUTH_ERROR",
+            message: "User credentials required for access_token",
+          },
         },
         corsHeaders,
       );
@@ -94,8 +103,10 @@ export const createProxyHandler = (
       credentials: {
         consumerKey: config.consumerKey,
         consumerSecret: config.consumerSecret,
-        token: body.userCredentials.token,
-        tokenSecret: body.userCredentials.tokenSecret,
+        token: isRequestToken ? undefined : body.userCredentials?.token,
+        tokenSecret: isRequestToken
+          ? undefined
+          : body.userCredentials?.tokenSecret,
       },
       userAgent: config.userAgent,
     });
@@ -106,6 +117,7 @@ export const createProxyHandler = (
         endpoint: body.endpoint,
         pathParams: toStringRecord(body.pathParams),
         queryParams: toStringRecord(body.queryParams),
+        oauthParams: body.oauthParams,
       });
 
       if (result.isOk()) {
@@ -200,9 +212,7 @@ function toStringRecord(
   record?: Record<string, string | number | boolean>,
 ): Record<string, string> | undefined {
   if (!record) return undefined;
-  const result: Record<string, string> = {};
-  for (const [key, value] of Object.entries(record)) {
-    result[key] = String(value);
-  }
-  return result;
+  return Object.fromEntries(
+    Object.entries(record).map(([k, v]) => [k, String(v)]),
+  );
 }

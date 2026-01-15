@@ -7,9 +7,10 @@ import type {
   RequestTokenResponse,
 } from "./types/mod.ts";
 import { getApiErrorType } from "./errors.ts";
+import { parseFormUrlEncoded } from "./parse-form-urlencoded.ts";
+import { getAuthorizeUrl as getAuthorizeUrlFromShared } from "./oauth-urls.ts";
 
 const DISCOGS_API_URL = "https://api.discogs.com";
-const DISCOGS_AUTH_URL = "https://discogs.com";
 
 type OAuthFlow = {
   getRequestToken: (
@@ -79,10 +80,7 @@ export const createOAuthFlow = (config: OAuthFlowConfig): OAuthFlow => {
     }
   };
 
-  const getAuthorizeUrl = (requestToken: string): string =>
-    `${DISCOGS_AUTH_URL}/oauth/authorize?oauth_token=${
-      encodeURIComponent(requestToken)
-    }`;
+  const getAuthorizeUrl = getAuthorizeUrlFromShared;
 
   const getAccessToken = async (
     requestToken: string,
@@ -138,14 +136,3 @@ export const createOAuthFlow = (config: OAuthFlowConfig): OAuthFlow => {
 
   return { getRequestToken, getAuthorizeUrl, getAccessToken };
 };
-
-function parseFormUrlEncoded(text: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const pair of text.split("&")) {
-    const [key, value] = pair.split("=");
-    if (key && value !== undefined) {
-      result[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
-  }
-  return result;
-}

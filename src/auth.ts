@@ -41,6 +41,7 @@ const signOAuthRequest = async (
     const requestUrl = buildRequestUrl(params.url, params.parameters);
     const signResult = await client.sign(params.method, requestUrl, {
       token: userToken,
+      params: params.oauthParams,
     });
 
     return ok(signResult);
