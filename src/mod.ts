@@ -6,6 +6,8 @@ export {
   type ProxyHandlerConfig,
 } from "./proxy-handler.ts";
 export { createOAuthFlow } from "./oauth-flow.ts";
+export { getAuthorizeUrl } from "./oauth-urls.ts";
+export { parseFormUrlEncoded } from "./parse-form-urlencoded.ts";
 
 export type {
   DirectModeConfig,

@@ -4,6 +4,7 @@ import { createAuthorizationHeader } from "./auth.ts";
 import { createProxyClient } from "./proxy-client.ts";
 import { parseRateLimitHeaders } from "./rate-limit.ts";
 import { getApiErrorType } from "./errors.ts";
+import { parseFormUrlEncoded } from "./parse-form-urlencoded.ts";
 import type {
   DiscogsApiError,
   DiscogsClient,
@@ -51,6 +52,7 @@ export const createDiscogsClient = (
         method: params.method,
         url: baseUrl,
         parameters: params.queryParams,
+        oauthParams: params.oauthParams,
       });
 
       if (authHeaderResult.isErr()) {
@@ -103,7 +105,10 @@ async function handleApiResponse<T>(
   }
 
   try {
-    const data = (await response.json()) as T;
+    const contentType = response.headers.get("content-type") || "";
+    const data = (contentType.includes("application/x-www-form-urlencoded")
+      ? parseFormUrlEncoded(await response.text())
+      : await response.json()) as T;
     return ok({ data, rateLimit });
   } catch (error) {
     return err({

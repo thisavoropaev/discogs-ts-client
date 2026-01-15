@@ -1,6 +1,6 @@
-# Discogs OAuth Example Worker
+# Discogs Proxy Worker with OAuth
 
-Cloudflare Worker example with OAuth 1.0a flow for Discogs API.
+Cloudflare Worker that proxies Discogs API calls including OAuth 1.0a flow.
 
 ## Setup
 
@@ -27,67 +27,79 @@ pnpm dev
 pnpm deploy
 ```
 
-## Endpoints
+## Usage
 
-### POST /request-token
+Single proxy endpoint handles all requests including OAuth.
 
-Start OAuth flow.
+### Request Token
 
-**Request:**
-
-```json
-{ "callback_url": "https://yourapp.com/callback" }
+```typescript
+const res = await fetch("https://your-worker.workers.dev", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    method: "POST",
+    endpoint: "/oauth/request_token",
+    oauthParams: { oauth_callback: "https://yourapp.com/callback" },
+  }),
+});
+const { data } = await res.json();
+// data: { oauth_token, oauth_token_secret, oauth_callback_confirmed }
 ```
 
-**Response:**
+### Authorize URL
 
-```json
-{
-  "success": true,
-  "data": {
-    "requestToken": "...",
-    "requestTokenSecret": "...",
-    "authUrl": "https://discogs.com/oauth/authorize?oauth_token=..."
-  }
-}
+```typescript
+import { getAuthorizeUrl } from "@thisavoropaev/discogs-ts-client";
+
+const authUrl = getAuthorizeUrl(data.oauth_token);
+window.location.href = authUrl;
 ```
 
-### POST /access-token
+### Access Token
 
-Exchange request token for access token.
+After user authorizes:
 
-**Request:**
-
-```json
-{
-  "requestToken": "...",
-  "requestTokenSecret": "...",
-  "oauthVerifier": "..."
-}
+```typescript
+const res = await fetch("https://your-worker.workers.dev", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    method: "POST",
+    endpoint: "/oauth/access_token",
+    oauthParams: { oauth_verifier: verifier },
+    userCredentials: {
+      token: requestToken,
+      tokenSecret: requestTokenSecret,
+    },
+  }),
+});
+const { data } = await res.json();
+// data: { oauth_token, oauth_token_secret }
 ```
 
-**Response:**
+### API Calls
 
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "...",
-    "accessTokenSecret": "..."
-  }
-}
+```typescript
+const res = await fetch("https://your-worker.workers.dev", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    method: "GET",
+    endpoint: "/oauth/identity",
+    userCredentials: {
+      token: accessToken,
+      tokenSecret: accessTokenSecret,
+    },
+  }),
+});
 ```
-
-### POST /api
-
-Proxy for authenticated Discogs API calls (same as base proxy worker).
 
 ## Client-Side Flow
 
-1. Call `/request-token` with callback URL
-2. Store `requestTokenSecret` client-side
-3. Redirect user to `authUrl`
-4. User authorizes, gets redirected to callback with `oauth_token` and
-   `oauth_verifier`
-5. Call `/access-token` with token, secret, and verifier
+1. Call proxy with `/oauth/request_token` endpoint
+2. Store `oauth_token_secret` client-side
+3. Redirect user to `getAuthorizeUrl(oauth_token)`
+4. User authorizes, gets redirected with `oauth_verifier`
+5. Call proxy with `/oauth/access_token` endpoint + request credentials
 6. Store access tokens securely for API calls

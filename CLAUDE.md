@@ -61,7 +61,7 @@ const client = createDiscogsClient({
 const client = createDiscogsClient({
   mode: "proxy",
   proxy: { url: "https://your-worker.workers.dev" },
-  userCredentials: { token, tokenSecret },
+  userCredentials: { token, tokenSecret }, // optional for app-only auth
 });
 ```
 
@@ -108,7 +108,7 @@ const handler = createProxyHandler({
 Frontend sends POST with JSON body:
 
 ```typescript
-{ method, endpoint, pathParams?, queryParams?, userCredentials: { token, tokenSecret } }
+{ method, endpoint, pathParams?, queryParams?, userCredentials?, oauthParams? }
 ```
 
 ### Key Source Files
