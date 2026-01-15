@@ -84,3 +84,71 @@ Deno.test("DiscogsClient - successful response includes rateLimit info", async (
     fetchStub.restore();
   }
 });
+
+Deno.test("DiscogsClient - parses form-urlencoded response", async () => {
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    () =>
+      Promise.resolve(
+        new Response(
+          "oauth_token=token123&oauth_token_secret=secret456&oauth_callback_confirmed=true",
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "x-discogs-ratelimit": "60",
+              "x-discogs-ratelimit-used": "1",
+              "x-discogs-ratelimit-remaining": "59",
+            },
+          },
+        ),
+      ),
+  );
+
+  try {
+    const client = createDiscogsClient(testConfig);
+    const result = await client.request({
+      method: "POST",
+      endpoint: "/oauth/request_token",
+    });
+
+    assertEquals(result.isOk(), true);
+    if (result.isOk()) {
+      const data = result.value.data as Record<string, string>;
+      assertEquals(data.oauth_token, "token123");
+      assertEquals(data.oauth_token_secret, "secret456");
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("DiscogsClient - returns PARSE_ERROR for empty form-urlencoded", async () => {
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    () =>
+      Promise.resolve(
+        new Response("", {
+          status: 200,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }),
+      ),
+  );
+
+  try {
+    const client = createDiscogsClient(testConfig);
+    const result = await client.request({
+      method: "POST",
+      endpoint: "/oauth/request_token",
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "PARSE_ERROR");
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});

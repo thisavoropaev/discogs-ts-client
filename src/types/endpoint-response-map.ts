@@ -1,4 +1,5 @@
 import type {
+  AccessTokenResponse,
   GetArtistReleasesResponse,
   GetArtistResponse,
   GetLabelReleasesResponse,
@@ -13,6 +14,7 @@ import type {
   GetUserIdentityResponse,
   GetUserProfileResponse,
   GetUserWantlistResponse,
+  RequestTokenResponse,
   UpdateReleaseRatingByUserResponse,
 } from "./endpoints/mod.ts";
 
@@ -46,6 +48,8 @@ export type EndpointResponseMap = {
     [endpoint: string]: unknown;
   };
   POST: {
+    "/oauth/request_token": RequestTokenResponse;
+    "/oauth/access_token": AccessTokenResponse;
     [endpoint: string]: unknown;
   };
 };

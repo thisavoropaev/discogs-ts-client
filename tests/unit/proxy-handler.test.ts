@@ -144,12 +144,49 @@ Deno.test("ProxyHandler - invalid JSON body returns VALIDATION_ERROR", async () 
   }
 });
 
-Deno.test("ProxyHandler - missing userCredentials returns AUTH_ERROR", async () => {
+Deno.test("ProxyHandler - app-only auth allowed without userCredentials", async () => {
   const handler = createProxyHandler(createConfig());
   const body = {
     method: "GET",
     endpoint: "/releases/{release_id}",
     pathParams: { release_id: 249504 },
+  };
+  const request = createRequest("POST", body, "https://example.com");
+
+  const mockData = { id: 249504, title: "Test Release" };
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    () =>
+      Promise.resolve(
+        new Response(JSON.stringify(mockData), {
+          status: 200,
+          headers: {
+            "x-discogs-ratelimit": "25",
+            "x-discogs-ratelimit-used": "1",
+            "x-discogs-ratelimit-remaining": "24",
+          },
+        }),
+      ),
+  );
+
+  try {
+    const response = await handler(request);
+    const data = (await response.json()) as ProxyResponse;
+
+    assertEquals(response.status, 200);
+    assertEquals(data.success, true);
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyHandler - /oauth/access_token requires userCredentials", async () => {
+  const handler = createProxyHandler(createConfig());
+  const body = {
+    method: "POST",
+    endpoint: "/oauth/access_token",
+    queryParams: { oauth_verifier: "verifier123" },
   };
   const request = createRequest("POST", body, "https://example.com");
 
@@ -161,6 +198,51 @@ Deno.test("ProxyHandler - missing userCredentials returns AUTH_ERROR", async () 
   if (!data.success) {
     assertEquals(data.error.type, "AUTH_ERROR");
     assertStringIncludes(data.error.message, "User credentials required");
+  }
+});
+
+Deno.test("ProxyHandler - /oauth/request_token works without userCredentials", async () => {
+  const handler = createProxyHandler(createConfig());
+  const body = {
+    method: "POST",
+    endpoint: "/oauth/request_token",
+    queryParams: { oauth_callback: "https://example.com/callback" },
+  };
+  const request = createRequest("POST", body, "https://example.com");
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    () =>
+      Promise.resolve(
+        new Response(
+          "oauth_token=token123&oauth_token_secret=secret456&oauth_callback_confirmed=true",
+          {
+            status: 200,
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+          },
+        ),
+      ),
+  );
+
+  try {
+    const response = await handler(request);
+    const data = (await response.json()) as ProxyResponse;
+
+    assertEquals(response.status, 200);
+    assertEquals(data.success, true);
+    if (data.success) {
+      assertEquals(
+        (data.data as Record<string, string>).oauth_token,
+        "token123",
+      );
+      assertEquals(
+        (data.data as Record<string, string>).oauth_token_secret,
+        "secret456",
+      );
+    }
+  } finally {
+    fetchStub.restore();
   }
 });
 

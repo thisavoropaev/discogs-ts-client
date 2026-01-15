@@ -12,6 +12,7 @@ export type OAuthSignatureParams = {
   method: HttpMethod;
   url: string;
   parameters?: QueryParams;
+  oauthParams?: Record<string, string>;
 };
 
 export type InternalOAuthErrorCode =
