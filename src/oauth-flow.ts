@@ -59,7 +59,17 @@ export const createOAuthFlow = (config: OAuthFlowConfig): OAuthFlow => {
       }
 
       const text = await response.text();
-      const parsed = parseFormUrlEncoded(text);
+      let parsed: Record<string, string>;
+      try {
+        parsed = parseFormUrlEncoded(text);
+      } catch (parseError) {
+        return err({
+          type: "PARSE_ERROR",
+          message: parseError instanceof Error
+            ? parseError.message
+            : "Failed to parse response",
+        });
+      }
 
       if (!parsed.oauth_token || !parsed.oauth_token_secret) {
         return err({
@@ -114,7 +124,17 @@ export const createOAuthFlow = (config: OAuthFlowConfig): OAuthFlow => {
       }
 
       const text = await response.text();
-      const parsed = parseFormUrlEncoded(text);
+      let parsed: Record<string, string>;
+      try {
+        parsed = parseFormUrlEncoded(text);
+      } catch (parseError) {
+        return err({
+          type: "PARSE_ERROR",
+          message: parseError instanceof Error
+            ? parseError.message
+            : "Failed to parse response",
+        });
+      }
 
       if (!parsed.oauth_token || !parsed.oauth_token_secret) {
         return err({

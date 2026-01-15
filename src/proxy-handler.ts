@@ -99,14 +99,17 @@ export const createProxyHandler = (
       );
     }
 
+    const userToken = isRequestToken ? undefined : body.userCredentials?.token;
+    const userTokenSecret = isRequestToken
+      ? undefined
+      : body.userCredentials?.tokenSecret;
+
     const client = createDiscogsClient({
       credentials: {
         consumerKey: config.consumerKey,
         consumerSecret: config.consumerSecret,
-        token: isRequestToken ? undefined : body.userCredentials?.token,
-        tokenSecret: isRequestToken
-          ? undefined
-          : body.userCredentials?.tokenSecret,
+        token: userToken,
+        tokenSecret: userTokenSecret,
       },
       userAgent: config.userAgent,
     });
