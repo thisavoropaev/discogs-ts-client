@@ -5,54 +5,12 @@ import {
   INVALID_RELEASE_ID,
   TEST_RELEASE_ID,
 } from "../integration/shared/test-data.ts";
-
-const PROXY_PORT = 8787;
-const PROXY_URL = `http://localhost:${PROXY_PORT}`;
-
-const startWrangler = (): Deno.ChildProcess => {
-  const cmd = new Deno.Command("pnpm", {
-    args: ["exec", "wrangler", "dev", "--port", String(PROXY_PORT)],
-    cwd: "./tests/local/proxy-worker",
-    stdout: "piped",
-    stderr: "piped",
-  });
-  return cmd.spawn();
-};
-
-const waitForWranglerReady = async (timeout = 30000): Promise<void> => {
-  const start = Date.now();
-  let attempts = 0;
-  let lastError: string | undefined;
-
-  while (Date.now() - start < timeout) {
-    try {
-      const resp = await fetch(PROXY_URL);
-      await resp.body?.cancel();
-      return;
-    } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
-      attempts++;
-      if (attempts % 10 === 0) {
-        console.log(`Waiting for wrangler (attempt ${attempts}): ${lastError}`);
-      }
-      await new Promise((r) => setTimeout(r, 500));
-    }
-  }
-  throw new Error(
-    `Wrangler did not start in time after ${attempts} attempts. Last error: ${lastError}`,
-  );
-};
-
-const stopWrangler = async (wrangler: Deno.ChildProcess): Promise<void> => {
-  try {
-    wrangler.kill("SIGTERM");
-  } catch {
-    // Process may have already terminated
-  }
-  await wrangler.stdout.cancel();
-  await wrangler.stderr.cancel();
-  await wrangler.status;
-};
+import {
+  startWrangler,
+  stopWrangler,
+  waitForWranglerReady,
+  WORKER_URL,
+} from "./wrangler-helpers.ts";
 
 const getProxyCredentials = () => {
   const token = Deno.env.get("DISCOGS_ACCESS_TOKEN");
@@ -73,12 +31,12 @@ Deno.test("Proxy Mode Integration Tests", async (t) => {
 
   try {
     await waitForWranglerReady();
-    console.log(`Wrangler ready at ${PROXY_URL}`);
+    console.log(`Wrangler ready at ${WORKER_URL}`);
 
     const credentials = getProxyCredentials();
     const client = createDiscogsClient({
       mode: "proxy",
-      proxy: { url: PROXY_URL },
+      proxy: { url: WORKER_URL },
       userCredentials: credentials,
     });
 

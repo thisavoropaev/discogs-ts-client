@@ -4,7 +4,17 @@
   "scripts": {
     "dev": "wrangler dev --port 8787"
   },
+  "dependencies": {
+    "neverthrow": "^8.2.0",
+    "oauth-1a": "npm:@jsr/thisavoropaev__oauth-1a@^1.0.0"
+  },
   "devDependencies": {
     "wrangler": "^4.58.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }

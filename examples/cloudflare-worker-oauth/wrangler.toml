@@ -1,0 +1,11 @@
+name = "discogs-oauth-example"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat_v2"]
+
+[vars]
+USER_AGENT = "DiscogsOAuthExample/1.0"
+
+# Set these secrets via wrangler:
+# wrangler secret put DISCOGS_CONSUMER_KEY
+# wrangler secret put DISCOGS_CONSUMER_SECRET

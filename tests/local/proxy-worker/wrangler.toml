@@ -5,3 +5,7 @@ compatibility_flags = ["nodejs_compat_v2"]
 
 [vars]
 USER_AGENT = "DiscogsProxy/1.0 (dev)"
+
+[alias]
+"oauth-1a" = "oauth-1a"
+"neverthrow" = "neverthrow"

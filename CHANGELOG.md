@@ -1,6 +1,5 @@
 # Changelog
 
-
 ## [1.0.0] - 2026-01-13
 
 ### Breaking Changes
@@ -21,6 +20,5 @@
 
 - Merge branch 'main' into development
 - Feature/review and refactoring (#8)
-
 
 ## [0.9.4] - 2026-01-12

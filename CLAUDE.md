@@ -25,10 +25,10 @@ deno task check             # Type check
 deno task lint              # Lint
 deno fmt                    # Format
 
-# Run a single test file
+# Run single test file
 deno test tests/unit/auth.test.ts --allow-net --allow-env
 
-# Run specific integration test suites
+# Integration test suites
 deno task test:integration:releases
 deno task test:integration:users
 deno task test:integration:database
@@ -42,13 +42,13 @@ deno task test:local:proxy
 
 ## Architecture
 
-### Two Client Modes
+### Three Main Entry Points
 
-The client factory (`createDiscogsClient`) supports two modes via discriminated
-union config:
+1. `createDiscogsClient` - API client (direct or proxy mode)
+2. `createProxyHandler` - Cloudflare Worker handler for proxying
+3. `createOAuthFlow` - Full OAuth 1.0a authorization flow
 
-1. **Direct mode** (default): Server-side usage with full OAuth credentials
-2. **Proxy mode**: Frontend usage via a Cloudflare Worker that holds app secrets
+### Client Modes
 
 ```typescript
 // Direct mode - server-side
@@ -65,64 +65,103 @@ const client = createDiscogsClient({
 });
 ```
 
-### Proxy Architecture
+### OAuth 1.0a Flow
 
-For frontend apps, deploy `createProxyHandler` as a Cloudflare Worker:
+For implementing Discogs authorization in your app:
 
-- Worker holds `consumerKey`/`consumerSecret` (app secrets)
-- Frontend sends user's `token`/`tokenSecret` per request
-- Worker creates fresh client per request with combined credentials
+```typescript
+const oauth = createOAuthFlow({
+  consumerKey: "...",
+  consumerSecret: "...",
+  userAgent: "MyApp/1.0",
+});
+
+// Step 1: Get request token
+const result = await oauth.getRequestToken("https://your-app.com/callback");
+// → { oauth_token, oauth_token_secret }
+
+// Step 2: Redirect user to authorize
+const authUrl = oauth.getAuthorizeUrl(result.value.oauth_token);
+
+// Step 3: Exchange verifier for access token
+const tokens = await oauth.getAccessToken(
+  requestToken,
+  requestTokenSecret,
+  verifier,
+);
+// → { oauth_token, oauth_token_secret }
+```
+
+### Proxy Handler
+
+Worker handler with CORS, validation, and error mapping:
+
+```typescript
+const handler = createProxyHandler({
+  consumerKey: "...",
+  consumerSecret: "...",
+  userAgent: "MyApp/1.0",
+  allowedOrigins: ["https://your-frontend.com"], // optional, defaults to ["*"]
+});
+```
+
+Frontend sends POST with JSON body:
+
+```typescript
+{ method, endpoint, pathParams?, queryParams?, userCredentials: { token, tokenSecret } }
+```
 
 ### Key Source Files
 
 - `src/mod.ts` - Public exports
-- `src/discogs-client.ts` - Client factory (routes to direct or proxy client)
+- `src/discogs-client.ts` - Client factory
+- `src/oauth-flow.ts` - OAuth 1.0a implementation
+- `src/proxy-handler.ts` - Worker handler with CORS/validation
 - `src/proxy-client.ts` - Proxy mode implementation
-- `src/proxy-handler.ts` - Cloudflare Worker handler
-- `src/auth.ts` - OAuth 1.0a signature generation
-- `src/rate-limit.ts` - Parses rate limit headers from Discogs responses
+- `src/auth.ts` - OAuth signature generation
+- `src/errors.ts` - Shared `getApiErrorType()` helper
 - `src/types/endpoint-response-map.ts` - Endpoint → response type mapping
 
 ### Type System
 
-Endpoints are mapped to response types via `EndpointResponseMap`. The generic
-`request` method infers return types based on HTTP method + endpoint path:
+`EndpointResponseMap` maps endpoints to response types. Return types inferred
+from method + path:
 
 ```typescript
-// Return type is automatically DiscogsResponse<GetReleaseResponse>
 const result = await client.request({
   method: "GET",
   endpoint: "/releases/{release_id}",
   pathParams: { release_id: 249504 },
 });
-```
-
-### Response Structure
-
-All successful responses are wrapped in `DiscogsResponse<T>`:
-
-```typescript
-interface DiscogsResponse<T> {
-  data: T; // The actual API response data
-  rateLimit: { // Discogs rate limit info from headers
-    limit: number; // Max requests per minute
-    used: number; // Requests used in current window
-    remaining: number;
-  };
-}
+// → Result<DiscogsResponse<GetReleaseResponse>, DiscogsApiError>
 ```
 
 ### Error Handling
 
-Uses `neverthrow` for Result-based error handling. All async operations return
-`Result<DiscogsResponse<T>, DiscogsApiError>`. Error types:
+Uses `neverthrow` Result-based returns. Error types:
 
-- `AUTH_ERROR` - Authentication failed (401)
-- `VALIDATION_ERROR` - Invalid request (400, 422)
-- `API_ERROR` - Server errors (5xx)
-- `NETWORK_ERROR` - Network connectivity issues
-- `PARSE_ERROR` - Failed to parse JSON response
-- `RATE_LIMIT_ERROR` - Rate limit exceeded (429)
+- `AUTH_ERROR` (401)
+- `VALIDATION_ERROR` (400, 422)
+- `API_ERROR` (5xx)
+- `NETWORK_ERROR`
+- `PARSE_ERROR`
+- `RATE_LIMIT_ERROR` (429)
+
+## Test Structure
+
+```
+tests/
+├── unit/           # Module isolation tests
+├── integration/    # Real Discogs API calls
+│   └── shared/     # Test helpers & data
+└── local/          # Wrangler-based proxy tests
+    ├── proxy.test.ts
+    ├── proxy-worker/   # Worker for local testing
+    └── wrangler-helpers.ts
+```
+
+Local tests use `startWrangler()`, `waitForWranglerReady()`, `stopWrangler()`
+helpers.
 
 ## Environment Variables
 
@@ -139,13 +178,17 @@ DISCOGS_ACCESS_TOKEN_SECRET=your_token_secret
 
 1. Add response types in `src/types/endpoints/`
 2. Export from `src/types/endpoints/mod.ts`
-3. Map endpoint to response type in `src/types/endpoint-response-map.ts`
+3. Map endpoint in `src/types/endpoint-response-map.ts`
 4. Add integration tests in `tests/integration/`
+
+## Examples
+
+`examples/cloudflare-worker/` - Basic proxy worker
+`examples/cloudflare-worker-oauth/` - Full OAuth + proxy worker
 
 ## Git Workflow
 
-- **NEVER push to `main` automatically.** Pushes to `main` trigger automatic
-  releases to JSR.
-- Work in feature branches or `development` branch.
-- Use conventional commits: `feat:` → minor, `fix:`/`perf:`/`refactor:` → patch,
-  `BREAKING CHANGE:` or `feat!:` → major
+- **NEVER push to `main`** - triggers automatic JSR releases
+- Work in feature branches
+- Conventional commits: `feat:` → minor, `fix:`/`perf:`/`refactor:` → patch,
+  `feat!:` → major

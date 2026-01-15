@@ -3,6 +3,7 @@ import { buildPath, buildRequestUrl } from "./url.ts";
 import { createAuthorizationHeader } from "./auth.ts";
 import { createProxyClient } from "./proxy-client.ts";
 import { parseRateLimitHeaders } from "./rate-limit.ts";
+import { getApiErrorType } from "./errors.ts";
 import type {
   DiscogsApiError,
   DiscogsClient,
@@ -112,11 +113,4 @@ async function handleApiResponse<T>(
       type: "PARSE_ERROR",
     });
   }
-}
-
-function getApiErrorType(status: number): DiscogsApiError["type"] {
-  if (status === 401) return "AUTH_ERROR";
-  if (status === 429) return "RATE_LIMIT_ERROR";
-  if (status >= 400 && status < 500) return "VALIDATION_ERROR";
-  return "API_ERROR";
 }
