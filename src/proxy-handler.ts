@@ -142,57 +142,15 @@ export const createProxyHandler = (
       );
     }
 
+    let response: Response;
     try {
-      const response = await fetch(requestUrl, {
+      response = await fetch(requestUrl, {
         method: body.method,
         headers: {
           "User-Agent": config.userAgent,
           Authorization: authResult.value,
         },
       });
-
-      const rateLimit = parseRateLimitHeaders(response.headers);
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => response.statusText);
-        return jsonResponse(
-          {
-            success: false,
-            error: {
-              type: getApiErrorType(response.status),
-              message: text || response.statusText,
-              statusCode: response.status,
-            },
-          },
-          corsHeaders,
-        );
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      let data: unknown;
-      try {
-        data = contentType.includes("application/x-www-form-urlencoded")
-          ? parseFormUrlEncoded(await response.text())
-          : await response.json();
-      } catch (error) {
-        return jsonResponse(
-          {
-            success: false,
-            error: {
-              type: "PARSE_ERROR",
-              message: error instanceof Error
-                ? error.message
-                : "Failed to parse response",
-            },
-          },
-          corsHeaders,
-        );
-      }
-
-      return jsonResponse(
-        { success: true, data, rateLimit: rateLimit as RateLimitInfo },
-        corsHeaders,
-      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal error";
       return jsonResponse(
@@ -206,6 +164,49 @@ export const createProxyHandler = (
         corsHeaders,
       );
     }
+
+    const rateLimit = parseRateLimitHeaders(response.headers);
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => response.statusText);
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            type: getApiErrorType(response.status),
+            message: text || response.statusText,
+            statusCode: response.status,
+          },
+        },
+        corsHeaders,
+      );
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    let data: unknown;
+    try {
+      data = contentType.includes("application/x-www-form-urlencoded")
+        ? parseFormUrlEncoded(await response.text())
+        : await response.json();
+    } catch (error) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            type: "PARSE_ERROR",
+            message: error instanceof Error
+              ? error.message
+              : "Failed to parse response",
+          },
+        },
+        corsHeaders,
+      );
+    }
+
+    return jsonResponse(
+      { success: true, data, rateLimit: rateLimit as RateLimitInfo },
+      corsHeaders,
+    );
   };
 };
 

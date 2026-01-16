@@ -285,3 +285,90 @@ Deno.test("ProxyClient - handles proxy server 5xx error", async () => {
     fetchStub.restore();
   }
 });
+
+Deno.test("ProxyClient - handles proxy 401 error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(new Response("Unauthorized", { status: 401 }))
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "AUTH_ERROR");
+      assertEquals(result.error.statusCode, 401);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - handles proxy 404 error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(new Response("Not Found", { status: 404 }))
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "VALIDATION_ERROR");
+      assertEquals(result.error.statusCode, 404);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - handles proxy 429 error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(new Response("Too Many Requests", { status: 429 }))
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "RATE_LIMIT_ERROR");
+      assertEquals(result.error.statusCode, 429);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});

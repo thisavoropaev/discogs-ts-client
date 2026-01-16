@@ -47,13 +47,26 @@ export const getRequestTokenViaProxy = async (
     });
   }
 
-  if (!response.ok && response.status >= 500) {
+  if (!response.ok) {
     const text = await response.text().catch(() => "");
+    if (response.status >= 500) {
+      return err({
+        message: `Proxy server error (${response.status}): ${
+          text.substring(0, 200) || response.statusText
+        }`,
+        type: "NETWORK_ERROR",
+        statusCode: response.status,
+      });
+    }
     return err({
-      message: `Proxy server error (${response.status}): ${
+      message: `Proxy request failed (${response.status}): ${
         text.substring(0, 200) || response.statusText
       }`,
-      type: "NETWORK_ERROR",
+      type: response.status === 401
+        ? "AUTH_ERROR"
+        : response.status === 429
+        ? "RATE_LIMIT_ERROR"
+        : "VALIDATION_ERROR",
       statusCode: response.status,
     });
   }
@@ -80,6 +93,12 @@ export const getRequestTokenViaProxy = async (
   }
 
   const { oauth_token, oauth_token_secret } = proxyResponse.data;
+  if (!oauth_token || !oauth_token_secret) {
+    return err({
+      message: "Invalid response: missing oauth_token or oauth_token_secret",
+      type: "PARSE_ERROR",
+    });
+  }
   return ok({
     requestToken: oauth_token,
     requestTokenSecret: oauth_token_secret,
@@ -115,13 +134,26 @@ export const getAccessTokenViaProxy = async (
     });
   }
 
-  if (!response.ok && response.status >= 500) {
+  if (!response.ok) {
     const text = await response.text().catch(() => "");
+    if (response.status >= 500) {
+      return err({
+        message: `Proxy server error (${response.status}): ${
+          text.substring(0, 200) || response.statusText
+        }`,
+        type: "NETWORK_ERROR",
+        statusCode: response.status,
+      });
+    }
     return err({
-      message: `Proxy server error (${response.status}): ${
+      message: `Proxy request failed (${response.status}): ${
         text.substring(0, 200) || response.statusText
       }`,
-      type: "NETWORK_ERROR",
+      type: response.status === 401
+        ? "AUTH_ERROR"
+        : response.status === 429
+        ? "RATE_LIMIT_ERROR"
+        : "VALIDATION_ERROR",
       statusCode: response.status,
     });
   }
@@ -148,6 +180,12 @@ export const getAccessTokenViaProxy = async (
   }
 
   const { oauth_token, oauth_token_secret } = proxyResponse.data;
+  if (!oauth_token || !oauth_token_secret) {
+    return err({
+      message: "Invalid response: missing oauth_token or oauth_token_secret",
+      type: "PARSE_ERROR",
+    });
+  }
   return ok({
     accessToken: oauth_token,
     accessTokenSecret: oauth_token_secret,

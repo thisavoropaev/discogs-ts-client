@@ -52,13 +52,26 @@ export const createProxyClient = (
         });
       }
 
-      if (!response.ok && response.status >= 500) {
+      if (!response.ok) {
         const text = await response.text().catch(() => "");
+        if (response.status >= 500) {
+          return err({
+            message: `Proxy server error (${response.status}): ${
+              text.substring(0, 200) || response.statusText
+            }`,
+            type: "NETWORK_ERROR",
+            statusCode: response.status,
+          });
+        }
         return err({
-          message: `Proxy server error (${response.status}): ${
+          message: `Proxy request failed (${response.status}): ${
             text.substring(0, 200) || response.statusText
           }`,
-          type: "NETWORK_ERROR",
+          type: response.status === 401
+            ? "AUTH_ERROR"
+            : response.status === 429
+            ? "RATE_LIMIT_ERROR"
+            : "VALIDATION_ERROR",
           statusCode: response.status,
         });
       }

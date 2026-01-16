@@ -267,3 +267,121 @@ Deno.test("getAccessTokenViaProxy - sends correct body", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+Deno.test("getRequestTokenViaProxy - 401 returns AUTH_ERROR", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(new Response("Unauthorized", { status: 401 }));
+
+  try {
+    const result = await getRequestTokenViaProxy(
+      "http://proxy",
+      "http://callback",
+    );
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "AUTH_ERROR");
+      assertEquals(result.error.statusCode, 401);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("getRequestTokenViaProxy - 429 returns RATE_LIMIT_ERROR", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(new Response("Too Many Requests", { status: 429 }));
+
+  try {
+    const result = await getRequestTokenViaProxy(
+      "http://proxy",
+      "http://callback",
+    );
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "RATE_LIMIT_ERROR");
+      assertEquals(result.error.statusCode, 429);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("getRequestTokenViaProxy - 404 returns VALIDATION_ERROR", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(new Response("Not Found", { status: 404 }));
+
+  try {
+    const result = await getRequestTokenViaProxy(
+      "http://proxy",
+      "http://callback",
+    );
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "VALIDATION_ERROR");
+      assertEquals(result.error.statusCode, 404);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("getRequestTokenViaProxy - missing oauth_token returns PARSE_ERROR", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: { oauth_token_secret: "secret" },
+        }),
+        { status: 200 },
+      ),
+    );
+
+  try {
+    const result = await getRequestTokenViaProxy(
+      "http://proxy",
+      "http://callback",
+    );
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "PARSE_ERROR");
+      assertStringIncludes(result.error.message, "missing oauth_token");
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("getAccessTokenViaProxy - missing oauth_token_secret returns PARSE_ERROR", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: { oauth_token: "token" },
+        }),
+        { status: 200 },
+      ),
+    );
+
+  try {
+    const result = await getAccessTokenViaProxy(
+      "http://proxy",
+      "reqToken",
+      "reqSecret",
+      "verifier",
+    );
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "PARSE_ERROR");
+      assertStringIncludes(result.error.message, "missing oauth_token");
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
