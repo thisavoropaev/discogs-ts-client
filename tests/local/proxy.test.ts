@@ -1,6 +1,7 @@
 import "dotenv";
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
 import { createDiscogsClient } from "@/discogs-client.ts";
+import { getRequestTokenViaProxy } from "@/proxy-oauth.ts";
 import {
   INVALID_RELEASE_ID,
   TEST_RELEASE_ID,
@@ -100,6 +101,33 @@ Deno.test("Proxy Mode Integration Tests", async (t) => {
             `✅ Error handling via proxy: ${result.error.type} - ${result.error.message}`,
           );
         }
+      },
+    );
+
+    await t.step(
+      "getRequestTokenViaProxy - should get request token via proxy protocol",
+      async () => {
+        const result = await getRequestTokenViaProxy(
+          WORKER_URL,
+          "http://localhost:3000/callback",
+        );
+
+        if (result.isErr()) {
+          console.error("OAuth error:", result.error);
+          throw new Error(`OAuth request failed: ${result.error.message}`);
+        }
+
+        assertExists(result.value.requestToken);
+        assertExists(result.value.requestTokenSecret);
+        assertStringIncludes(
+          result.value.authorizeUrl,
+          "discogs.com/oauth/authorize",
+        );
+        console.log(
+          `✅ Request token via helper: ${
+            result.value.requestToken.substring(0, 10)
+          }...`,
+        );
       },
     );
   } finally {

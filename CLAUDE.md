@@ -57,17 +57,17 @@ const client = createDiscogsClient({
   userAgent: "MyApp/1.0",
 });
 
-// Proxy mode - frontend via worker
+// Proxy mode - frontend via worker (requires user tokens)
 const client = createDiscogsClient({
   mode: "proxy",
   proxy: { url: "https://your-worker.workers.dev" },
-  userCredentials: { token, tokenSecret }, // optional for app-only auth
+  userCredentials: { token, tokenSecret },
 });
 ```
 
 ### OAuth 1.0a Flow
 
-For implementing Discogs authorization in your app:
+For server-side OAuth (direct mode):
 
 ```typescript
 const oauth = createOAuthFlow({
@@ -90,6 +90,40 @@ const tokens = await oauth.getAccessToken(
   verifier,
 );
 // → { oauth_token, oauth_token_secret }
+```
+
+For frontend OAuth via proxy:
+
+```typescript
+import {
+  getAccessTokenViaProxy,
+  getRequestTokenViaProxy,
+} from "@thisavoropaev/discogs-ts-client";
+
+// Step 1: Get request token via proxy
+const result = await getRequestTokenViaProxy(proxyUrl, callbackUrl);
+// → { requestToken, requestTokenSecret, authorizeUrl }
+
+// Step 2: Redirect user to result.value.authorizeUrl
+
+// Step 3: Exchange verifier for access token
+const tokens = await getAccessTokenViaProxy(
+  proxyUrl,
+  requestToken,
+  requestTokenSecret,
+  verifier,
+);
+// → { accessToken, accessTokenSecret }
+
+// Step 4: Create client with obtained tokens
+const client = createDiscogsClient({
+  mode: "proxy",
+  proxy: { url: proxyUrl },
+  userCredentials: {
+    token: tokens.value.accessToken,
+    tokenSecret: tokens.value.accessTokenSecret,
+  },
+});
 ```
 
 ### Proxy Handler
@@ -115,7 +149,8 @@ Frontend sends POST with JSON body:
 
 - `src/mod.ts` - Public exports
 - `src/discogs-client.ts` - Client factory
-- `src/oauth-flow.ts` - OAuth 1.0a implementation
+- `src/oauth-flow.ts` - OAuth 1.0a implementation (server-side)
+- `src/proxy-oauth.ts` - OAuth helpers for frontend via proxy
 - `src/proxy-handler.ts` - Worker handler with CORS/validation
 - `src/proxy-client.ts` - Proxy mode implementation
 - `src/auth.ts` - OAuth signature generation

@@ -286,111 +286,88 @@ Deno.test("ProxyClient - handles proxy server 5xx error", async () => {
   }
 });
 
-Deno.test("ProxyClient - forwards oauthParams in request body", async () => {
+Deno.test("ProxyClient - handles proxy 401 error", async () => {
   const config = createProxyConfig();
   const client = createDiscogsClient(config);
 
-  let capturedBody: ProxyRequestBody | undefined;
-
   const fetchStub = stub(
     globalThis,
     "fetch",
-    mockFetch((_input, init) => {
-      capturedBody = JSON.parse(init?.body as string) as ProxyRequestBody;
-      return Promise.resolve(
-        new Response(JSON.stringify(createSuccessResponse({})), {
-          status: 200,
-        }),
-      );
-    }),
+    mockFetch(() =>
+      Promise.resolve(new Response("Unauthorized", { status: 401 }))
+    ),
   );
 
   try {
-    await client.request({
-      method: "POST",
-      endpoint: "/oauth/request_token",
-      oauthParams: { oauth_callback: "https://example.com/callback" },
-    });
-
-    assertExists(capturedBody);
-    assertEquals(capturedBody.oauthParams, {
-      oauth_callback: "https://example.com/callback",
-    });
-  } finally {
-    fetchStub.restore();
-  }
-});
-
-Deno.test("ProxyClient - per-request userCredentials overrides config", async () => {
-  const config = createProxyConfig();
-  const client = createDiscogsClient(config);
-
-  let capturedBody: ProxyRequestBody | undefined;
-
-  const fetchStub = stub(
-    globalThis,
-    "fetch",
-    mockFetch((_input, init) => {
-      capturedBody = JSON.parse(init?.body as string) as ProxyRequestBody;
-      return Promise.resolve(
-        new Response(JSON.stringify(createSuccessResponse({})), {
-          status: 200,
-        }),
-      );
-    }),
-  );
-
-  try {
-    await client.request({
-      method: "POST",
-      endpoint: "/oauth/access_token",
-      userCredentials: {
-        token: "request-token",
-        tokenSecret: "request-secret",
-      },
-    });
-
-    assertExists(capturedBody);
-    assertEquals(capturedBody.userCredentials, {
-      token: "request-token",
-      tokenSecret: "request-secret",
-    });
-  } finally {
-    fetchStub.restore();
-  }
-});
-
-Deno.test("ProxyClient - works without config userCredentials", async () => {
-  const config: ProxyModeConfig = {
-    mode: "proxy",
-    proxy: { url: "https://proxy.example.com/discogs" },
-  };
-  const client = createDiscogsClient(config);
-
-  let capturedBody: ProxyRequestBody | undefined;
-
-  const fetchStub = stub(
-    globalThis,
-    "fetch",
-    mockFetch((_input, init) => {
-      capturedBody = JSON.parse(init?.body as string) as ProxyRequestBody;
-      return Promise.resolve(
-        new Response(JSON.stringify(createSuccessResponse({})), {
-          status: 200,
-        }),
-      );
-    }),
-  );
-
-  try {
-    await client.request({
+    const result = await client.request({
       method: "GET",
       endpoint: "/releases/{release_id}",
       pathParams: { release_id: "249504" },
     });
 
-    assertExists(capturedBody);
-    assertEquals(capturedBody.userCredentials, undefined);
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "AUTH_ERROR");
+      assertEquals(result.error.statusCode, 401);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - handles proxy 404 error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(new Response("Not Found", { status: 404 }))
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "VALIDATION_ERROR");
+      assertEquals(result.error.statusCode, 404);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - handles proxy 429 error", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(new Response("Too Many Requests", { status: 429 }))
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "RATE_LIMIT_ERROR");
+      assertEquals(result.error.statusCode, 429);
+    }
   } finally {
     fetchStub.restore();
   }

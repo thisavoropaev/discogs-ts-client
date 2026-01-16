@@ -43,5 +43,9 @@
     "fmt": "deno fmt",
     "check": "deno check src/mod.ts"
   },
-  "exclude": ["node_modules", "dist", "coverage"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
+  ]
 }

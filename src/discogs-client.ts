@@ -52,7 +52,6 @@ export const createDiscogsClient = (
         method: params.method,
         url: baseUrl,
         parameters: params.queryParams,
-        oauthParams: params.oauthParams,
       });
 
       if (authHeaderResult.isErr()) {
