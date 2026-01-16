@@ -8,6 +8,12 @@ export {
 export { createOAuthFlow } from "./oauth-flow.ts";
 export { getAuthorizeUrl } from "./oauth-urls.ts";
 export { parseFormUrlEncoded } from "./parse-form-urlencoded.ts";
+export {
+  type AccessTokenResult,
+  getAccessTokenViaProxy,
+  getRequestTokenViaProxy,
+  type RequestTokenResult,
+} from "./proxy-oauth.ts";
 
 export type {
   DirectModeConfig,

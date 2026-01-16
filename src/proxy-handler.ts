@@ -1,5 +1,15 @@
-import { createDiscogsClient } from "./discogs-client.ts";
-import type { ProxyRequestBody, ProxyResponse } from "./types/mod.ts";
+import { createAuthorizationHeader } from "./auth.ts";
+import { buildPath, buildRequestUrl } from "./url.ts";
+import { parseRateLimitHeaders } from "./rate-limit.ts";
+import { getApiErrorType } from "./errors.ts";
+import { parseFormUrlEncoded } from "./parse-form-urlencoded.ts";
+import type {
+  ProxyRequestBody,
+  ProxyResponse,
+  RateLimitInfo,
+} from "./types/mod.ts";
+
+const DISCOGS_API_URL = "https://api.discogs.com";
 
 export type ProxyHandlerConfig = {
   consumerKey: string;
@@ -104,45 +114,83 @@ export const createProxyHandler = (
       ? undefined
       : body.userCredentials?.tokenSecret;
 
-    const client = createDiscogsClient({
+    const path = buildPath(body.endpoint, toStringRecord(body.pathParams));
+    const baseUrl = `${DISCOGS_API_URL}/${path.replace(/^\//, "")}`;
+    const queryParams = toStringRecord(body.queryParams);
+    const requestUrl = buildRequestUrl(baseUrl, queryParams);
+
+    const authResult = await createAuthorizationHeader({
       credentials: {
         consumerKey: config.consumerKey,
         consumerSecret: config.consumerSecret,
         token: userToken,
         tokenSecret: userTokenSecret,
       },
-      userAgent: config.userAgent,
+      method: body.method,
+      url: baseUrl,
+      parameters: queryParams,
+      oauthParams: body.oauthParams,
     });
 
+    if (authResult.isErr()) {
+      return jsonResponse(
+        {
+          success: false,
+          error: { type: "AUTH_ERROR", message: authResult.error.message },
+        },
+        corsHeaders,
+      );
+    }
+
     try {
-      const result = await client.request({
-        method: body.method as "GET" | "POST" | "PUT" | "DELETE",
-        endpoint: body.endpoint,
-        pathParams: toStringRecord(body.pathParams),
-        queryParams: toStringRecord(body.queryParams),
-        oauthParams: body.oauthParams,
+      const response = await fetch(requestUrl, {
+        method: body.method,
+        headers: {
+          "User-Agent": config.userAgent,
+          Authorization: authResult.value,
+        },
       });
 
-      if (result.isOk()) {
+      const rateLimit = parseRateLimitHeaders(response.headers);
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => response.statusText);
         return jsonResponse(
           {
-            success: true,
-            data: result.value.data,
-            rateLimit: result.value.rateLimit,
+            success: false,
+            error: {
+              type: getApiErrorType(response.status),
+              message: text || response.statusText,
+              statusCode: response.status,
+            },
+          },
+          corsHeaders,
+        );
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      let data: unknown;
+      try {
+        data = contentType.includes("application/x-www-form-urlencoded")
+          ? parseFormUrlEncoded(await response.text())
+          : await response.json();
+      } catch (error) {
+        return jsonResponse(
+          {
+            success: false,
+            error: {
+              type: "PARSE_ERROR",
+              message: error instanceof Error
+                ? error.message
+                : "Failed to parse response",
+            },
           },
           corsHeaders,
         );
       }
 
       return jsonResponse(
-        {
-          success: false,
-          error: {
-            type: result.error.type,
-            message: result.error.message,
-            statusCode: result.error.statusCode,
-          },
-        },
+        { success: true, data, rateLimit: rateLimit as RateLimitInfo },
         corsHeaders,
       );
     } catch (error) {
@@ -150,7 +198,10 @@ export const createProxyHandler = (
       return jsonResponse(
         {
           success: false,
-          error: { type: "VALIDATION_ERROR", message },
+          error: {
+            type: "NETWORK_ERROR",
+            message: `Network request failed: ${message}`,
+          },
         },
         corsHeaders,
       );
@@ -173,7 +224,7 @@ function getCorsHeaders(
   const isAllowed = isOriginAllowed(origin, allowedOrigins);
 
   return {
-    "Access-Control-Allow-Origin": isAllowed ? (origin ?? "*") : "",
+    "Access-Control-Allow-Origin": isAllowed ? origin ?? "*" : "",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };

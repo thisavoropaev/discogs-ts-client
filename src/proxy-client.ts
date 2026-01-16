@@ -25,7 +25,6 @@ export const createProxyClient = (
         DiscogsApiError
       >
     > => {
-      const userCredentials = params.userCredentials ?? config.userCredentials;
       const body: ProxyRequestBody = {
         method: params.method,
         endpoint: params.endpoint as string,
@@ -33,8 +32,7 @@ export const createProxyClient = (
         queryParams: params.queryParams as
           | Record<string, string | number | boolean>
           | undefined,
-        userCredentials,
-        oauthParams: params.oauthParams,
+        userCredentials: config.userCredentials,
       };
 
       let response: Response;
