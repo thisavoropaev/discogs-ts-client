@@ -19,6 +19,7 @@ export type DiscogsApiError = {
   message: string;
   statusCode?: number;
   details?: unknown;
+  rateLimit?: RateLimitInfo;
 };
 
 export type QueryParams = Record<string, string>;

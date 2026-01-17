@@ -20,11 +20,21 @@ Deno.test("DiscogsClient - initialization", () => {
   assertExists(client.request);
 });
 
-Deno.test("DiscogsClient - returns RATE_LIMIT_ERROR for 429 response", async () => {
+Deno.test("DiscogsClient - returns RATE_LIMIT_ERROR for 429 response with rateLimit info", async () => {
   const fetchStub = stub(
     globalThis,
     "fetch",
-    () => Promise.resolve(new Response("Too Many Requests", { status: 429 })),
+    () =>
+      Promise.resolve(
+        new Response("Too Many Requests", {
+          status: 429,
+          headers: {
+            "x-discogs-ratelimit": "60",
+            "x-discogs-ratelimit-used": "60",
+            "x-discogs-ratelimit-remaining": "0",
+          },
+        }),
+      ),
   );
 
   try {
@@ -39,6 +49,11 @@ Deno.test("DiscogsClient - returns RATE_LIMIT_ERROR for 429 response", async () 
     if (result.isErr()) {
       assertEquals(result.error.type, "RATE_LIMIT_ERROR");
       assertEquals(result.error.statusCode, 429);
+      assertEquals(result.error.rateLimit, {
+        limit: 60,
+        used: 60,
+        remaining: 0,
+      });
     }
   } finally {
     fetchStub.restore();

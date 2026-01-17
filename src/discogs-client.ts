@@ -100,6 +100,7 @@ async function handleApiResponse<T>(
       message: text || response.statusText,
       statusCode: response.status,
       type: getApiErrorType(response.status),
+      rateLimit,
     });
   }
 
@@ -115,6 +116,7 @@ async function handleApiResponse<T>(
         ? error.message
         : "Failed to parse response",
       type: "PARSE_ERROR",
+      rateLimit,
     });
   }
 }

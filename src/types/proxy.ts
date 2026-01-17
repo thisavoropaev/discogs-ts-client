@@ -26,6 +26,7 @@ export type ProxyErrorPayload = {
   type: DiscogsApiErrorType;
   message: string;
   statusCode?: number;
+  rateLimit?: RateLimitInfo;
 };
 
 export type ProxyResponse<T = unknown> =
