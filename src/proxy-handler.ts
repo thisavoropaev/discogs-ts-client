@@ -176,6 +176,7 @@ export const createProxyHandler = (
             type: getApiErrorType(response.status),
             message: text || response.statusText,
             statusCode: response.status,
+            rateLimit,
           },
         },
         corsHeaders,

@@ -100,6 +100,7 @@ async function handleApiResponse<T>(
       message: text || response.statusText,
       statusCode: response.status,
       type: getApiErrorType(response.status),
+      rateLimit,
     });
   }
 

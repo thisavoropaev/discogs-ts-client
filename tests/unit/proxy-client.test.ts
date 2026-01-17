@@ -31,9 +31,10 @@ const createErrorResponse = (
   type: DiscogsApiErrorType,
   message: string,
   statusCode?: number,
+  rateLimit?: { limit: number; used: number; remaining: number },
 ): ProxyResponse => ({
   success: false,
-  error: { type, message, statusCode },
+  error: { type, message, statusCode, rateLimit },
 });
 
 // deno-lint-ignore no-explicit-any
@@ -367,6 +368,49 @@ Deno.test("ProxyClient - handles proxy 429 error", async () => {
     if (result.isErr()) {
       assertEquals(result.error.type, "RATE_LIMIT_ERROR");
       assertEquals(result.error.statusCode, 429);
+    }
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("ProxyClient - includes rateLimit in error from proxy response", async () => {
+  const config = createProxyConfig();
+  const client = createDiscogsClient(config);
+
+  const rateLimit = { limit: 60, used: 60, remaining: 0 };
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    mockFetch(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(
+            createErrorResponse(
+              "RATE_LIMIT_ERROR",
+              "Rate limit exceeded",
+              429,
+              rateLimit,
+            ),
+          ),
+          { status: 429 },
+        ),
+      )
+    ),
+  );
+
+  try {
+    const result = await client.request({
+      method: "GET",
+      endpoint: "/releases/{release_id}",
+      pathParams: { release_id: "249504" },
+    });
+
+    assertEquals(result.isErr(), true);
+    if (result.isErr()) {
+      assertEquals(result.error.type, "RATE_LIMIT_ERROR");
+      assertEquals(result.error.statusCode, 429);
+      assertEquals(result.error.rateLimit, rateLimit);
     }
   } finally {
     fetchStub.restore();
