@@ -116,6 +116,7 @@ async function handleApiResponse<T>(
         ? error.message
         : "Failed to parse response",
       type: "PARSE_ERROR",
+      rateLimit,
     });
   }
 }
