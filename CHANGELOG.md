@@ -1,5 +1,13 @@
 # Changelog
 
+
+## [1.1.3] - 2026-01-17
+
+### Bug Fixes
+
+- include rateLimit in error responses (#25)
+
+
 ## [1.1.2] - 2026-01-16
 
 ## [1.1.1] - 2026-01-15
