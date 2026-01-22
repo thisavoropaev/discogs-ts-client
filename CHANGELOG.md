@@ -1,5 +1,14 @@
 # Changelog
 
+
+## [1.1.4] - 2026-01-22
+
+### Bug Fixes
+
+- correct wantlist endpoint path from /wantlist to /wants (#26)
+- include rateLimit in error responses (#25)
+
+
 ## [1.1.3] - 2026-01-17
 
 ### Bug Fixes
