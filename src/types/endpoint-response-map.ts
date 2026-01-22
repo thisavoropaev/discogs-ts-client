@@ -34,7 +34,7 @@ export type EndpointResponseMap = {
     "/users/{username}/collection/folders": GetUserCollectionFoldersResponse;
     "/users/{username}/collection/folders/{folder_id}/releases":
       GetUserCollectionItemsResponse;
-    "/users/{username}/wantlist": GetUserWantlistResponse;
+    "/users/{username}/wants": GetUserWantlistResponse;
     [endpoint: string]: unknown;
   };
   PUT: {

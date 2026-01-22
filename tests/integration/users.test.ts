@@ -80,6 +80,33 @@ Deno.test("Users and Collections Tests", async (t) => {
   );
 
   await t.step(
+    "GET /users/{username}/wants - should return wantlist",
+    async () => {
+      const username = await getCurrentUsername(client);
+
+      const result = await client.request({
+        method: "GET",
+        endpoint: "/users/{username}/wants",
+        pathParams: { username },
+      });
+
+      if (result.isErr()) {
+        console.error("Wantlist error:", result.error);
+        throw new Error(`Wantlist request failed: ${result.error.message}`);
+      }
+
+      const wantlist = result.value.data;
+      assertExists(wantlist.pagination);
+      assertExists(wantlist.wants);
+      assertEquals(Array.isArray(wantlist.wants), true);
+
+      logSuccess(
+        `Wantlist: ${wantlist.wants.length} items on page, ${wantlist.pagination.items} total`,
+      );
+    },
+  );
+
+  await t.step(
     "PUT /users/{username}/wants/{release_id} - should add release to wantlist",
     async () => {
       const username = await getCurrentUsername(client);
