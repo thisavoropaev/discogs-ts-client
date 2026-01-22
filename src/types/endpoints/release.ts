@@ -133,12 +133,3 @@ export interface Video {
   title: string;
   uri: string;
 }
-
-export interface GetReleaseRatingByUserResponse {
-  username: string;
-  release_id: number;
-  rating: number;
-}
-
-export interface UpdateReleaseRatingByUserResponse
-  extends GetReleaseRatingByUserResponse {}
